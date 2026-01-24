@@ -2,18 +2,18 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS } from '../../src/constants/colors';
 
-export default function FavoritesScreen() {
+export default function MapScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>⭐ Favorites</Text>
-        <Text style={styles.headerSubtitle}>Your saved trails & places</Text>
+        <Text style={styles.headerTitle}>📍 Map</Text>
+        <Text style={styles.headerSubtitle}>Interactive trail map</Text>
       </View>
       
       <View style={styles.content}>
-        <Text style={styles.placeholderText}>❤️</Text>
-        <Text style={styles.text}>No Favorites Yet</Text>
-        <Text style={styles.subtext}>Start exploring and save your favorite trails!</Text>
+        <Text style={styles.placeholderText}>🗺️</Text>
+        <Text style={styles.text}>Map View</Text>
+        <Text style={styles.subtext}>Mapbox integration coming soon...</Text>
       </View>
     </View>
   );

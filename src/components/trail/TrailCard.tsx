@@ -1,25 +1,10 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { TrailCardStyles } from '../../styles/components/trailCard.styles';
-
-interface Trail {
-  id: string;
-  name: string;
-  slug: string;
-  short_description: string;
-  difficulty: 'easy' | 'moderate' | 'hard';
-  distance_miles: number;
-  elevation_gain_ft: number;
-  estimated_time_hours: number;
-  image_main: string;
-  avg_rating: number;
-  total_reviews: number;
-  kid_friendly: boolean;
-  dog_friendly: boolean;
-}
+import { TrailSummary } from '../../types/trail.types';
 
 interface TrailCardProps {
-  trail: Trail;
+  trail: TrailSummary;
   onPress: () => void;
 }
 
