@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Animated,
+  GestureResponderEvent,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,9 +31,49 @@ const ICONS: Record<
 export function GlassTabBar({ state, descriptors, navigation }: any) {
   const WrapperComponent = Platform.OS === 'ios' ? BlurView : View;
   const blurProps = Platform.OS === 'ios' ? { intensity: 80, tint: 'light' as const } : {};
+  
+  const touchStartX = useRef(0);
+  const [swipeProgress, setSwipeProgress] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+
+  const handleTouchStart = (e: GestureResponderEvent) => {
+    touchStartX.current = e.nativeEvent.pageX;
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: GestureResponderEvent) => {
+    const currentX = e.nativeEvent.pageX;
+    const deltaX = currentX - touchStartX.current;
+    // Calculate progress (0 to 1) based on swipe distance
+    const progress = Math.min(Math.abs(deltaX) / 100, 1);
+    setSwipeProgress(progress);
+  };
+
+  const handleTouchEnd = (e: GestureResponderEvent) => {
+    const touchEndX = e.nativeEvent.pageX;
+    const deltaX = touchEndX - touchStartX.current;
+
+    // FIXED: Swipe RIGHT (finger moves right) → go to NEXT tab (right in list)
+    if (deltaX > 50 && state.index < state.routes.length - 1) {
+      navigation.navigate(state.routes[state.index + 1].name);
+    }
+    // FIXED: Swipe LEFT (finger moves left) → go to PREVIOUS tab (left in list)
+    else if (deltaX < -50 && state.index > 0) {
+      navigation.navigate(state.routes[state.index - 1].name);
+    }
+
+    // Reset swipe state
+    setIsSwiping(false);
+    setSwipeProgress(0);
+  };
 
   return (
-    <View style={styles.wrapper}>
+    <View 
+      style={styles.wrapper}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <WrapperComponent {...blurProps} style={styles.blur}>
         <View style={styles.container}>
           {state.routes.map((route: any, index: number) => {
@@ -41,38 +83,71 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
             if (!icon) return null;
 
             return (
-              <TouchableOpacity
+              <TabItem
                 key={route.key}
+                icon={icon}
+                isFocused={isFocused}
+                isSwiping={isSwiping}
+                swipeProgress={swipeProgress}
                 onPress={() => navigation.navigate(route.name)}
-                activeOpacity={0.7}
-                style={styles.touch}
-              >
-                <View
-                  style={[
-                    styles.item,
-                    isFocused && styles.activeItem,
-                  ]}
-                >
-                  <Ionicons
-                    name={isFocused ? icon.active : icon.inactive}
-                    size={20}
-                    color={isFocused ? '#ffffff' : '#6b7280'}
-                  />
-                  <Text
-                    style={[
-                      styles.label,
-                      isFocused && styles.activeLabel,
-                    ]}
-                  >
-                    {icon.label}
-                  </Text>
-                </View>
-              </TouchableOpacity>
+              />
             );
           })}
         </View>
       </WrapperComponent>
     </View>
+  );
+}
+
+// Separate component for smooth animations
+function TabItem({ icon, isFocused, isSwiping, swipeProgress, onPress }: any) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.spring(scaleAnim, {
+      toValue: isFocused ? 1.1 : 1,
+      friction: 6,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
+  }, [isFocused]);
+
+  // Calculate opacity based on swipe progress
+  const backgroundOpacity = isFocused && isSwiping 
+    ? 1 - (swipeProgress * 0.5) // Fade from 1.0 to 0.5 during swipe
+    : 1;
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      style={styles.touch}
+    >
+      <Animated.View
+        style={[
+          styles.item,
+          isFocused && {
+            ...styles.activeItem,
+            backgroundColor: `rgba(45, 90, 63, ${backgroundOpacity})`,
+          },
+          { transform: [{ scale: scaleAnim }] },
+        ]}
+      >
+        <Ionicons
+          name={isFocused ? icon.active : icon.inactive}
+          size={20}
+          color={isFocused ? '#ffffff' : '#6b7280'}
+        />
+        <Text
+          style={[
+            styles.label,
+            isFocused && styles.activeLabel,
+          ]}
+        >
+          {icon.label}
+        </Text>
+      </Animated.View>
+    </TouchableOpacity>
   );
 }
 
