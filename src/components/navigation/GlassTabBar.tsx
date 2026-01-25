@@ -7,6 +7,7 @@ import {
   Platform,
   Animated,
   GestureResponderEvent,
+  LayoutChangeEvent,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,6 +36,32 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
   const touchStartX = useRef(0);
   const [swipeProgress, setSwipeProgress] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const highlightPosition = useRef(new Animated.Value(state.index)).current;
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [tabPositions, setTabPositions] = useState<number[]>([]);
+
+  useEffect(() => {
+    // Animate highlight to current tab when not swiping
+    if (!isSwiping) {
+      Animated.spring(highlightPosition, {
+        toValue: state.index,
+        friction: 8,
+        tension: 80,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [state.index, isSwiping]);
+
+  const handleTabLayout = (index: number, event: LayoutChangeEvent) => {
+    const { x, width } = event.nativeEvent.layout;
+    const centerX = x + (width / 2) - 27; // 27 is half of circle width (54/2)
+    
+    setTabPositions(prev => {
+      const newPositions = [...prev];
+      newPositions[index] = centerX;
+      return newPositions;
+    });
+  };
 
   const handleTouchStart = (e: GestureResponderEvent) => {
     touchStartX.current = e.nativeEvent.pageX;
@@ -44,28 +71,50 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
   const handleTouchMove = (e: GestureResponderEvent) => {
     const currentX = e.nativeEvent.pageX;
     const deltaX = currentX - touchStartX.current;
-    // Calculate progress (0 to 1) based on swipe distance
+    
+    // Find closest tab based on touch position
+    if (tabPositions.length === 5) {
+      const tabBarLeft = 30;
+      const relativeX = currentX - tabBarLeft;
+      
+      let closestIndex = 0;
+      let minDistance = Infinity;
+      
+      tabPositions.forEach((pos, idx) => {
+        const distance = Math.abs(relativeX - (pos + 27)); // +27 to center
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = idx;
+        }
+      });
+      
+      setHoverIndex(closestIndex);
+      highlightPosition.setValue(closestIndex);
+    }
+    
+    // Calculate swipe progress
     const progress = Math.min(Math.abs(deltaX) / 100, 1);
     setSwipeProgress(progress);
   };
 
   const handleTouchEnd = (e: GestureResponderEvent) => {
-    const touchEndX = e.nativeEvent.pageX;
-    const deltaX = touchEndX - touchStartX.current;
-
-    // FIXED: Swipe RIGHT (finger moves right) → go to NEXT tab (right in list)
-    if (deltaX > 50 && state.index < state.routes.length - 1) {
-      navigation.navigate(state.routes[state.index + 1].name);
-    }
-    // FIXED: Swipe LEFT (finger moves left) → go to PREVIOUS tab (left in list)
-    else if (deltaX < -50 && state.index > 0) {
-      navigation.navigate(state.routes[state.index - 1].name);
+    // PRIORITY: If hovering over a tab, go to that tab (even if swiped far)
+    if (hoverIndex !== null && hoverIndex !== state.index) {
+      navigation.navigate(state.routes[hoverIndex].name);
     }
 
-    // Reset swipe state
+    // Reset state
     setIsSwiping(false);
     setSwipeProgress(0);
+    setHoverIndex(null);
   };
+
+  const highlightTranslateX = highlightPosition.interpolate({
+    inputRange: [0, 1, 2, 3, 4],
+    outputRange: tabPositions.length === 5 
+      ? tabPositions 
+      : [0, 0, 0, 0, 0],
+  });
 
   return (
     <View 
@@ -76,8 +125,23 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
     >
       <WrapperComponent {...blurProps} style={styles.blur}>
         <View style={styles.container}>
+          {/* Moving Highlight - FIXED SIZE */}
+          {tabPositions.length === 5 && (
+            <Animated.View
+              style={[
+                styles.movingHighlight,
+                {
+                  transform: [{ translateX: highlightTranslateX }],
+                  opacity: isSwiping ? 0.7 : 1,
+                },
+              ]}
+            />
+          )}
+
+          {/* Tab Items */}
           {state.routes.map((route: any, index: number) => {
             const isFocused = state.index === index;
+            const isHovered = hoverIndex === index;
             const icon = ICONS[route.name];
 
             if (!icon) return null;
@@ -87,9 +151,10 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
                 key={route.key}
                 icon={icon}
                 isFocused={isFocused}
+                isHovered={isHovered}
                 isSwiping={isSwiping}
-                swipeProgress={swipeProgress}
                 onPress={() => navigation.navigate(route.name)}
+                onLayout={(e: LayoutChangeEvent) => handleTabLayout(index, e)}
               />
             );
           })}
@@ -100,48 +165,42 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
 }
 
 // Separate component for smooth animations
-function TabItem({ icon, isFocused, isSwiping, swipeProgress, onPress }: any) {
+function TabItem({ icon, isFocused, isHovered, isSwiping, onPress, onLayout }: any) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.spring(scaleAnim, {
-      toValue: isFocused ? 1.1 : 1,
+      toValue: isFocused || isHovered ? 1.1 : 1,
       friction: 6,
       tension: 100,
       useNativeDriver: true,
     }).start();
-  }, [isFocused]);
+  }, [isFocused, isHovered]);
 
-  // Calculate opacity based on swipe progress
-  const backgroundOpacity = isFocused && isSwiping 
-    ? 1 - (swipeProgress * 0.5) // Fade from 1.0 to 0.5 during swipe
-    : 1;
+  const showActive = isHovered || isFocused;
 
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
       style={styles.touch}
+      onLayout={onLayout}
     >
       <Animated.View
         style={[
           styles.item,
-          isFocused && {
-            ...styles.activeItem,
-            backgroundColor: `rgba(45, 90, 63, ${backgroundOpacity})`,
-          },
           { transform: [{ scale: scaleAnim }] },
         ]}
       >
         <Ionicons
-          name={isFocused ? icon.active : icon.inactive}
+          name={showActive ? icon.active : icon.inactive}
           size={20}
-          color={isFocused ? '#ffffff' : '#6b7280'}
+          color={showActive ? '#ffffff' : '#6b7280'}
         />
         <Text
           style={[
             styles.label,
-            isFocused && styles.activeLabel,
+            showActive && styles.activeLabel,
           ]}
         >
           {icon.label}
@@ -175,27 +234,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'space-between',
+    position: 'relative',
   },
-  touch: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  item: {
-    minWidth: 54,
-    height: 54,
-    borderRadius: 27,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    overflow: 'hidden',
-  },
-  activeItem: {
+  movingHighlight: {
+    position: 'absolute',
+    width: 54, // FIXED SIZE
+    height: 54, // FIXED SIZE
+    borderRadius: 27, // FIXED RADIUS
     backgroundColor: ACTIVE_GREEN,
     shadowColor: ACTIVE_GREEN,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+  },
+  touch: {
+    flex: 1,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  item: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 8,
   },
   label: {
     fontSize: 10,
