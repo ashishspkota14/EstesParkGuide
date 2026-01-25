@@ -1,38 +1,36 @@
+import { useEffect } from 'react';
+import { router } from 'expo-router';
+import { View, ActivityIndicator } from 'react-native';
+import { useAuth } from '../src/context/AuthContext';
+import { COLORS } from '../src/constants/colors';
 
-import { Redirect } from "expo-router";
+export default function Index() {
+  const { user, loading } = useAuth();
 
-export default function RootIndex() {
-  return <Redirect href="/tabs" />;
+  useEffect(() => {
+    if (!loading) {
+      // Always show welcome screen on app start
+      // User can choose to login or skip
+      router.replace('/(auth)/welcome');
+    }
+  }, [loading]);
+
+  // Show loading while checking auth
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
+      <ActivityIndicator size="large" color={COLORS.primary} />
+    </View>
+  );
 }
 
 
 
-// import { View, Text, StyleSheet } from 'react-native';
 
-// export default function Index() {
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.title}>🏔️ Estes Park Guide</Text>
-//       <Text style={styles.subtitle}>App is running!</Text>
-//     </View>
-//   );
+// import { Redirect } from "expo-router";
+
+// export default function RootIndex() {
+//   return <Redirect href="/tabs" />;
 // }
 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     backgroundColor: '#f4f1e8',
-//   },
-//   title: {
-//     fontSize: 32,
-//     fontWeight: 'bold',
-//     color: '#2d5a3f',
-//     marginBottom: 8,
-//   },
-//   subtitle: {
-//     fontSize: 18,
-//     color: '#666',
-//   },
-// });
+
+

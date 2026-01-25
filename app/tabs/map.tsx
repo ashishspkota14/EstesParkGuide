@@ -1,72 +1,99 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ActivityIndicator, Alert } from 'react-native';
+import Mapbox from '@rnmapbox/maps';
+import { mapStyles } from '../../src/styles/screens/map.styles';
 import { COLORS } from '../../src/constants/colors';
+import TrailMapMarkers from '../../src/components/location/TrailMapMarkers';
+import MapControls from '../../src/components/location/MapControls';
+import { Trail } from '../../src/types/trail.types';
+import { MapStyleType } from '../../src/types/map.types';
+
+// Set Mapbox access token
+Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN || '');
 
 export default function MapScreen() {
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>📍 Map</Text>
-        <Text style={styles.headerSubtitle}>Interactive trail map</Text>
-      </View>
+  const [trails, setTrails] = useState<Trail[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [mapStyle, setMapStyle] = useState<MapStyleType>('outdoors');
+
+  const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+
+  useEffect(() => {
+    fetchTrails();
+  }, []);
+
+  const fetchTrails = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/trails`);
+      const data = await response.json();
       
-      <View style={styles.content}>
-        <Text style={styles.placeholderText}>🗺️</Text>
-        <Text style={styles.text}>Map View</Text>
-        <Text style={styles.subtext}>Mapbox integration coming soon...</Text>
+      if (data.success) {
+        const realTrails = data.data.filter(
+          (trail: Trail) => trail.slug !== 'test-trail' && trail.slug !== 'test-trail-2'
+        );
+        setTrails(realTrails);
+      }
+    } catch (err) {
+      console.error('Error fetching trails:', err);
+      Alert.alert('Error', 'Failed to load trail locations');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleMapStyle = () => {
+    setMapStyle(prev => prev === 'outdoors' ? 'satellite' : 'outdoors');
+  };
+
+  const getMapStyleURL = () => {
+    return mapStyle === 'outdoors'
+      ? 'mapbox://styles/mapbox/outdoors-v12'
+      : 'mapbox://styles/mapbox/satellite-streets-v12';
+  };
+
+  if (loading) {
+    return (
+      <View style={mapStyles.centerContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={mapStyles.loadingText}>Loading map...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={mapStyles.container}>
+      <Mapbox.MapView
+        style={mapStyles.map}
+        styleURL={getMapStyleURL()}
+      >
+        <Mapbox.Camera
+          zoomLevel={11}
+          centerCoordinate={[-105.5217, 40.3772]} // Estes Park center
+          animationMode="flyTo"
+          animationDuration={2000}
+        />
+
+        {/* Trail Markers */}
+        <TrailMapMarkers trails={trails} />
+
+        {/* User Location */}
+        <Mapbox.LocationPuck
+          visible={true}
+          pulsing={{ isEnabled: true }}
+        />
+      </Mapbox.MapView>
+
+      {/* Map Controls */}
+      <MapControls
+        mapStyle={mapStyle}
+        onToggleStyle={toggleMapStyle}
+      />
+
+      {/* Header */}
+      <View style={mapStyles.header}>
+        <Text style={mapStyles.headerTitle}>🗺️ Trail Map</Text>
+        <Text style={mapStyles.headerSubtitle}>{trails.length} trails</Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    backgroundColor: COLORS.card,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: COLORS.textLight,
-    fontWeight: '500',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  placeholderText: {
-    fontSize: 80,
-    marginBottom: 20,
-  },
-  text: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 8,
-  },
-  subtext: {
-    fontSize: 16,
-    color: COLORS.textLight,
-    textAlign: 'center',
-  },
-});

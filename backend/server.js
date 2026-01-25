@@ -10,6 +10,7 @@ import { startCronJob } from './src/config/cron.js';
 import healthRoutes from './src/routes/health.js';
 import trailRoutes from './src/routes/trails.js';
 import weatherRoutes from './src/routes/weather.js';
+import userRoutes from './src/routes/users.js';
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use((req, res, next) => {
 app.use('/api/health', healthRoutes);
 app.use('/api/trails', trailRoutes);
 app.use('/api/weather', weatherRoutes);
+app.use('/api/users', userRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -48,6 +50,12 @@ app.get('/', (req, res) => {
         current: '/api/weather',
         forecast: '/api/weather/forecast',
         alerts: '/api/weather/alerts'
+      },
+      users: {
+        me: 'GET /api/users/me',
+        profile: 'GET /api/users/:id',
+        updateProfile: 'PUT /api/users/:id',
+        stats: 'GET /api/users/:id/stats'
       }
     }
   });
@@ -91,9 +99,11 @@ const startServer = async () => {
 ╔═══════════════════════════════════════╗
 ║   🏔️  ESTES PARK GUIDE API           ║
 ║                                       ║
-║   Server runnings on port ${ENV.PORT}        ║
+║   Server running on port ${ENV.PORT}        ║
 ║   Environment: ${ENV.NODE_ENV}           ║
 ║   URL: ${ENV.API_URL}   ║
+║                                       ║
+║   ✅ Auth Routes Enabled              ║
 ╚═══════════════════════════════════════╝
       `);
     });
