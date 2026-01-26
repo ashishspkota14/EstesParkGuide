@@ -6,6 +6,7 @@
       "ios": {
         "simulator": false,
         "buildConfiguration": "Debug",
+          "podInstallArgs": ["--repo-update"],
         "env": {
           "RNMAPBOX_DOWNLOAD_TOKEN": "@RNMAPBOX_DOWNLOAD_TOKEN"
         }
