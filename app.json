@@ -9,7 +9,6 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourname.estespark",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs your location to show nearby trails.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs your location to show nearby trails.",
@@ -23,16 +22,6 @@
         "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
-    "plugins": [
-      [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsDownloadToken": "@RNMAPBOX_DOWNLOAD_TOKEN",
-          "RNMapboxMapsVersion": "10.13.2"
-        }
-      ],
-      "expo-router"
-    ],
     "extra": {
       "eas": {
         "projectId": "bf7e7caf-5b5a-48b9-978e-33654726f480"

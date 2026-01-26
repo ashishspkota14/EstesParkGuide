@@ -1,34 +1,25 @@
 {
+  "cli": {
+    "version": ">= 3.36.0"
+  },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-    "ios": {
-  "simulator": false,
-  "buildConfiguration": "Debug",
-  "env": {
-    "RNMAPBOX_DOWNLOAD_TOKEN": "@RNMAPBOX_DOWNLOAD_TOKEN"
-  },
-  "prebuildCommand": "pod repo update"
-},
-      "env": {
-        "npm_config_legacy_peer_deps": "true"
+      "ios": {
+        "simulator": false
       }
     },
     "preview": {
       "distribution": "internal",
       "ios": {
-        "env": {
-          "RNMAPBOX_DOWNLOAD_TOKEN": "@RNMAPBOX_DOWNLOAD_TOKEN"
-        }
+        "simulator": false
       }
     },
     "production": {
       "distribution": "store",
       "ios": {
-        "env": {
-          "RNMAPBOX_DOWNLOAD_TOKEN": "@RNMAPBOX_DOWNLOAD_TOKEN"
-        }
+        "simulator": false
       }
     }
   }
