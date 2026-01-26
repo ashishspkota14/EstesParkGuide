@@ -45,12 +45,23 @@ export default function SignUpScreen() {
     const result = await signUp(email, password, name);
     
     if (result.success) {
-      Alert.alert(
-        'Success',
-        'Account created! Please check your email to verify your account.',
-        [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
-      );
+      // Only show success if there's no error message
+      if (!result.error) {
+        Alert.alert(
+          'Success',
+          'Account created! Please check your email to verify your account.',
+          [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+        );
+      } else {
+        // Success with warning
+        Alert.alert(
+          'Account Created',
+          result.error,
+          [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+        );
+      }
     } else {
+      // Failed - show error
       Alert.alert('Sign Up Failed', result.error || 'Could not create account');
     }
   };

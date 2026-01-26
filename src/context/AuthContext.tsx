@@ -72,6 +72,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       
+      // FIRST: Check if user already exists in our users table
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', email)
+        .single();
+
+      if (existingUser) {
+        return { 
+          success: false, 
+          error: 'An account with this email already exists. Please sign in instead.' 
+        };
+      }
+
       // Sign up with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -87,22 +101,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: error.message };
       }
 
-      // Create user profile in database
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: data.user.id,
-              email: email,
-              full_name: name,
-              created_at: new Date().toISOString(),
-            },
-          ]);
+      if (!data.user) {
+        return { success: false, error: 'Failed to create account' };
+      }
 
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
+      // Create user profile in database
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert([
+          {
+            id: data.user.id,
+            email: email,
+            full_name: name,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        
+        // Check if it's a duplicate error
+        if (profileError.code === '23505') {
+          return { 
+            success: false, 
+            error: 'An account with this email already exists. Please sign in instead.' 
+          };
         }
+        
+        // For other errors, still consider signup successful but warn user
+        return { 
+          success: true,
+          error: 'Account created but profile setup incomplete. You can still sign in.'
+        };
       }
 
       return { success: true };
