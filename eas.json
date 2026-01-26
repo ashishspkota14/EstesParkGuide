@@ -3,14 +3,14 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "ios": {
-        "simulator": false,
-        "buildConfiguration": "Debug",
-          "podInstallArgs": ["--repo-update"],
-        "env": {
-          "RNMAPBOX_DOWNLOAD_TOKEN": "@RNMAPBOX_DOWNLOAD_TOKEN"
-        }
-      },
+    "ios": {
+  "simulator": false,
+  "buildConfiguration": "Debug",
+  "env": {
+    "RNMAPBOX_DOWNLOAD_TOKEN": "@RNMAPBOX_DOWNLOAD_TOKEN"
+  },
+  "prebuildCommand": "pod repo update"
+},
       "env": {
         "npm_config_legacy_peer_deps": "true"
       }
