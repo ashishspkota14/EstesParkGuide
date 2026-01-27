@@ -9,7 +9,7 @@ import { Trail } from '../../src/types/trail.types';
 import { MapStyleType } from '../../src/types/map.types';
 
 // Set Mapbox access token
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN || '');
+Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '');
 
 export default function MapScreen() {
   const [trails, setTrails] = useState<Trail[]>([]);

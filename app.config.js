@@ -5,23 +5,25 @@ module.exports = ({ config }) => {
       ...config.ios,
       bundleIdentifier: "com.yourname.estespark",
     },
-    plugins: [
-      [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsVersion": "10.16.4",
-          // Matches your current EAS environment variable exactly
-          "RNMapboxMapsDownloadToken": process.env.RNMAPBOX_DOWNLOAD_TOKEN 
-        }
-      ],
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "useFrameworks": "static"
-          }
-        }
-      ]
-    ]
+   plugins: [
+  [
+    "@rnmapbox/maps",
+    {
+      "RNMapboxMapsImpl": "mapbox",
+      "RNMapboxMapsVersion": "11.8.0",
+      "RNMapboxMapsDownloadToken": process.env.RNMAPBOX_DOWNLOAD_TOKEN || "placeholder"
+    }
+  ],
+  [
+    "expo-build-properties",
+    {
+      "ios": {
+        "useFrameworks": "static",
+        "deploymentTarget": "15.1",
+        "modular_headers": true // <--- Add this line
+      }
+    }
+  ]
+]
   };
 };

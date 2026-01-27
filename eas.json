@@ -3,7 +3,13 @@
     "version": ">= 3.36.0"
   },
   "build": {
+    "base": {
+      "env": {
+        "RNMAPBOX_DOWNLOAD_TOKEN": "YOUR_ACTUAL_TOKEN_HERE"
+      }
+    },
     "development": {
+      "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
@@ -11,12 +17,14 @@
       }
     },
     "preview": {
+      "extends": "base",
       "distribution": "internal",
       "ios": {
         "simulator": false
       }
     },
     "production": {
+      "extends": "base",
       "distribution": "store",
       "ios": {
         "simulator": false
