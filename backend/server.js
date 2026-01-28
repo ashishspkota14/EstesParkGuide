@@ -11,6 +11,7 @@ import healthRoutes from './src/routes/health.js';
 import trailRoutes from './src/routes/trails.js';
 import weatherRoutes from './src/routes/weather.js';
 import userRoutes from './src/routes/users.js';
+import favoriteRoutes from './src/routes/favorites.js';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/trails', trailRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/favorites', favoriteRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -56,6 +58,12 @@ app.get('/', (req, res) => {
         profile: 'GET /api/users/:id',
         updateProfile: 'PUT /api/users/:id',
         stats: 'GET /api/users/:id/stats'
+      },
+      favorites: {
+        userFavorites: 'GET /api/favorites/:userId',
+        add: 'POST /api/favorites',
+        remove: 'DELETE /api/favorites/:userId/:trailId',
+        check: 'GET /api/favorites/:userId/:trailId/check'
       }
     }
   });
@@ -104,6 +112,7 @@ const startServer = async () => {
 ║   URL: ${ENV.API_URL}   ║
 ║                                       ║
 ║   ✅ Auth Routes Enabled              ║
+║   ✅ Favorites Routes Enabled         ║
 ╚═══════════════════════════════════════╝
       `);
     });

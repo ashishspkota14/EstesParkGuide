@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { SafeAreaProvider } from 'react-native-safe-area-context'; // NEW: Import
 import TrailCard from '../../src/components/trail/TrailCard';
 import { HikingStyles } from '../../src/styles/screens/hiking.styles';
 import { COLORS } from '../../src/constants/colors';
@@ -18,6 +19,7 @@ export default function HikingScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0); // NEW: Force re-render when favorites change
   const router = useRouter();
 
   // Get API URL from environment variable
@@ -56,6 +58,11 @@ export default function HikingScreen() {
     fetchTrails();
   };
 
+  // NEW: Handle favorite changes
+  const handleFavoriteChange = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
   const handleTrailPress = (trail: TrailSummary) => {
     router.push(`/trail/${trail.slug}`);
   };
@@ -90,10 +97,15 @@ export default function HikingScreen() {
 
       {/* Trail List */}
       <FlatList
+        key={refreshKey} // NEW: Forces re-render when favorites change
         data={trails}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TrailCard trail={item} onPress={() => handleTrailPress(item)} />
+          <TrailCard 
+            trail={item} 
+            onPress={() => handleTrailPress(item)}
+            onFavoriteChange={handleFavoriteChange} // NEW: Notify when favorite changes
+          />
         )}
         contentContainerStyle={HikingStyles.listContent}
         showsVerticalScrollIndicator={false}

@@ -1,99 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import Mapbox from '@rnmapbox/maps';
-import { mapStyles } from '../../src/styles/screens/map.styles';
+import { supabase } from '../../src/services/supabase/client';
 import { COLORS } from '../../src/constants/colors';
-import TrailMapMarkers from '../../src/components/location/TrailMapMarkers';
-import MapControls from '../../src/components/location/MapControls';
-import { Trail } from '../../src/types/trail.types';
-import { MapStyleType } from '../../src/types/map.types';
-
-// Set Mapbox access token
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '');
+import { mapStyles } from '../../src/styles/screens/map.styles';
+import TrailRouteOverlay from '../../src/components/trail/TrailRouteOverlay';
 
 export default function MapScreen() {
-  const [trails, setTrails] = useState<Trail[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [mapStyle, setMapStyle] = useState<MapStyleType>('outdoors');
-
-  const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+  const params = useLocalSearchParams();
+  const [trail, setTrail] = useState<any>(null);
+  const [is3DMode, setIs3DMode] = useState(false);
+  const [mapStyle, setMapStyle] = useState<string>(Mapbox.StyleURL.Outdoors);
+  
+  const trailId = params.trailId as string;
+  const mode = params.mode as string;
 
   useEffect(() => {
-    fetchTrails();
-  }, []);
+    if (trailId) {
+      fetchTrailData();
+    }
+  }, [trailId]);
 
-  const fetchTrails = async () => {
+  const fetchTrailData = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/trails`);
-      const data = await response.json();
-      
-      if (data.success) {
-        const realTrails = data.data.filter(
-          (trail: Trail) => trail.slug !== 'test-trail' && trail.slug !== 'test-trail-2'
-        );
-        setTrails(realTrails);
-      }
-    } catch (err) {
-      console.error('Error fetching trails:', err);
-      Alert.alert('Error', 'Failed to load trail locations');
-    } finally {
-      setLoading(false);
+      const { data, error } = await supabase
+        .from('trails')
+        .select('*')
+        .eq('id', trailId)
+        .single();
+
+      if (error) throw error;
+      setTrail(data);
+    } catch (error) {
+      console.error('Error fetching trail:', error);
     }
   };
 
+  const toggle3D = () => {
+    setIs3DMode(!is3DMode);
+  };
+
   const toggleMapStyle = () => {
-    setMapStyle(prev => prev === 'outdoors' ? 'satellite' : 'outdoors');
-  };
-
-  const getMapStyleURL = () => {
-    return mapStyle === 'outdoors'
-      ? 'mapbox://styles/mapbox/outdoors-v12'
-      : 'mapbox://styles/mapbox/satellite-streets-v12';
-  };
-
-  if (loading) {
-    return (
-      <View style={mapStyles.centerContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={mapStyles.loadingText}>Loading map...</Text>
-      </View>
+    setMapStyle(prev => 
+      prev === Mapbox.StyleURL.Outdoors 
+        ? Mapbox.StyleURL.Satellite 
+        : Mapbox.StyleURL.Outdoors
     );
-  }
+  };
+
+  const centerCoords = trail?.start_lat && trail?.start_lng
+    ? [trail.start_lng, trail.start_lat]
+    : [-105.5217, 40.3772];
 
   return (
     <View style={mapStyles.container}>
       <Mapbox.MapView
         style={mapStyles.map}
-        styleURL={getMapStyleURL()}
+        styleURL={mapStyle}
       >
         <Mapbox.Camera
-          zoomLevel={11}
-          centerCoordinate={[-105.5217, 40.3772]} // Estes Park center
-          animationMode="flyTo"
-          animationDuration={2000}
+          zoomLevel={14}
+          centerCoordinate={centerCoords}
+          pitch={is3DMode ? 60 : 0}
+          animationDuration={1000}
         />
 
-        {/* Trail Markers */}
-        <TrailMapMarkers trails={trails} />
-
-        {/* User Location */}
         <Mapbox.LocationPuck
-          visible={true}
           pulsing={{ isEnabled: true }}
+          puckBearingEnabled
+          puckBearing="heading"
         />
+
+        {trail && <TrailRouteOverlay trail={trail} isNavigating={mode === 'navigate'} />}
       </Mapbox.MapView>
 
-      {/* Map Controls */}
-      <MapControls
-        mapStyle={mapStyle}
-        onToggleStyle={toggleMapStyle}
-      />
+      <TouchableOpacity
+        style={mapStyles.button3D}
+        onPress={toggle3D}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="cube-outline" size={24} color={is3DMode ? COLORS.primary : '#fff'} />
+        <Text style={[mapStyles.buttonText, is3DMode && mapStyles.buttonTextActive]}>
+          {is3DMode ? '2D' : '3D'}
+        </Text>
+      </TouchableOpacity>
 
-      {/* Header */}
-      <View style={mapStyles.header}>
-        <Text style={mapStyles.headerTitle}>🗺️ Trail Map</Text>
-        <Text style={mapStyles.headerSubtitle}>{trails.length} trails</Text>
-      </View>
+      <TouchableOpacity
+        style={mapStyles.buttonLayers}
+        onPress={toggleMapStyle}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="layers-outline" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      {trail && (
+        <View style={mapStyles.trailInfoCard}>
+          <View style={mapStyles.trailInfo}>
+            <Text style={mapStyles.trailName} numberOfLines={1}>{trail.name}</Text>
+            <View style={mapStyles.trailStats}>
+              <Text style={mapStyles.trailStat}>
+                {trail.distance_miles?.toFixed(1)} mi
+              </Text>
+              <Text style={mapStyles.trailStatDivider}>•</Text>
+              <Text style={mapStyles.trailStat}>
+                {trail.elevation_gain_ft?.toLocaleString()} ft gain
+              </Text>
+              <Text style={mapStyles.trailStatDivider}>•</Text>
+              <Text style={mapStyles.trailStat}>
+                Est. {Math.round(trail.distance_miles / 2)}h {Math.round((trail.distance_miles / 2 * 60) % 60)}m
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }

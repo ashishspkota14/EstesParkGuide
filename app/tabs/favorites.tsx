@@ -1,72 +1,162 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
+  TouchableOpacity
+} from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../src/context/AuthContext';
+import { supabase } from '../../src/services/supabase/client';
 import { COLORS } from '../../src/constants/colors';
+import { favoritesStyles } from '../../src/styles/screens/favorites.styles';
+import TrailCard from '../../src/components/trail/TrailCard';
 
 export default function FavoritesScreen() {
+  const { user } = useAuth();
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Auto-fetch when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchFavorites();
+    }, [user])
+  );
+
+  const fetchFavorites = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('favorites')
+        .select(`
+          id,
+          created_at,
+          trails (*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedFavorites = data
+        .filter((fav: any) => fav.trails !== null)
+        .map((fav: any) => ({
+          ...fav.trails,
+          favorite_id: fav.id,
+          favorited_at: fav.created_at
+        }));
+
+      setFavorites(formattedFavorites);
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchFavorites();
+    setRefreshing(false);
+  }, [user]);
+
+  const handleFavoriteChange = () => {
+    fetchFavorites();
+  };
+
+  const renderEmpty = () => {
+    if (!user) {
+      return (
+        <View style={favoritesStyles.emptyContainer}>
+          <View style={favoritesStyles.iconCircle}>
+            <Ionicons name="heart-outline" size={48} color={COLORS.border} />
+          </View>
+          <Text style={favoritesStyles.emptyTitle}>Save Your Favorite Trails</Text>
+          <Text style={favoritesStyles.emptyText}>
+            Sign in to save trails and access them anytime, even offline.
+          </Text>
+          <TouchableOpacity
+            style={favoritesStyles.signInButton}
+            onPress={() => router.push('/(auth)/login')}
+            activeOpacity={0.8}
+          >
+            <Text style={favoritesStyles.signInButtonText}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <View style={favoritesStyles.emptyContainer}>
+        <View style={favoritesStyles.iconCircle}>
+          <Ionicons name="bookmark-outline" size={48} color={COLORS.border} />
+        </View>
+        <Text style={favoritesStyles.emptyTitle}>No Favorites Yet</Text>
+        <Text style={favoritesStyles.emptyText}>
+          Tap the bookmark icon on any trail to save it here for quick access.
+        </Text>
+        <TouchableOpacity
+          style={favoritesStyles.exploreButton}
+          onPress={() => router.push('/tabs/hiking')}
+          activeOpacity={0.8}
+        >
+          <Text style={favoritesStyles.exploreButtonText}>Explore Trails</Text>
+          <Ionicons name="arrow-forward" size={18} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={favoritesStyles.loader}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>⭐ Favorites</Text>
-        <Text style={styles.headerSubtitle}>Your saved trails & places</Text>
+    <View style={favoritesStyles.container}>
+      <View style={favoritesStyles.header}>
+        <Text style={favoritesStyles.title}>Favorites</Text>
+        {favorites.length > 0 && (
+          <Text style={favoritesStyles.count}>
+            {favorites.length} {favorites.length === 1 ? 'Trail' : 'Trails'}
+          </Text>
+        )}
       </View>
-      
-      <View style={styles.content}>
-        <Text style={styles.placeholderText}>❤️</Text>
-        <Text style={styles.text}>No Favorites Yet</Text>
-        <Text style={styles.subtext}>Start exploring and save your favorite trails!</Text>
-      </View>
+
+      <FlatList
+        data={favorites}
+        keyExtractor={(item) => item.favorite_id}
+        renderItem={({ item }) => (
+          <View style={favoritesStyles.cardContainer}>
+            <TrailCard 
+              trail={item}
+              onFavoriteChange={handleFavoriteChange}
+            />
+          </View>
+        )}
+        ListEmptyComponent={renderEmpty}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primary}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={favorites.length === 0 && favoritesStyles.emptyList}
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    backgroundColor: COLORS.card,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: COLORS.textLight,
-    fontWeight: '500',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  placeholderText: {
-    fontSize: 80,
-    marginBottom: 20,
-  },
-  text: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 8,
-  },
-  subtext: {
-    fontSize: 16,
-    color: COLORS.textLight,
-    textAlign: 'center',
-  },
-});

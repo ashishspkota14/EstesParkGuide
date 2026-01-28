@@ -1,29 +1,35 @@
 import { StyleSheet } from 'react-native';
 import { COLORS } from '../../constants/colors';
 
-export const TrailCardStyles = StyleSheet.create({
+export const trailCardStyles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.card,
-    borderRadius: 20,
-    marginBottom: 20,
+    backgroundColor: '#fff',
+    borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  imageContainer: {
+    height: 180,
+    position: 'relative',
   },
   image: {
     width: '100%',
-    height: 220,
+    height: '100%',
   },
-  imageOverlay: {
+  bookmarkButton: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 220,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    top: 12,
+    right: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     padding: 16,
@@ -31,87 +37,52 @@ export const TrailCardStyles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  headerLeft: {
-    flex: 1,
-  },
   name: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rating: {
-    fontSize: 14,
+    flex: 1,
+    fontSize: 18,
     fontWeight: '700',
     color: COLORS.text,
-    marginRight: 4,
+    marginRight: 8,
   },
-  reviews: {
-    fontSize: 13,
-    color: COLORS.textLight,
-  },
-  description: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    lineHeight: 20,
-    marginBottom: 14,
-  },
-  statsRow: {
-    marginBottom: 12,
-  },
-  difficultyBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 14,
-    alignSelf: 'flex-start',
-    marginBottom: 12,
-  },
-  difficultyText: {
-    color: COLORS.white,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  stats: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  stat: {
+  ratingBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  statIcon: {
-    fontSize: 16,
-  },
-  statText: {
+  rating: {
     fontSize: 14,
+    fontWeight: '600',
     color: COLORS.text,
+  },
+  details: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 12,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  detailText: {
+    fontSize: 14,
+    color: COLORS.textLight,
     fontWeight: '600',
   },
-  tagsRow: {
+  footer: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-    flexWrap: 'wrap',
   },
   tag: {
-    backgroundColor: COLORS.background,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  tagText: {
-    fontSize: 12,
-    color: COLORS.text,
-    fontWeight: '600',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
