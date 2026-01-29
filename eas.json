@@ -7,7 +7,8 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "RNMAPBOX_DOWNLOAD_TOKEN": "RNMAPBOX_DOWNLOAD_TOKEN"
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
+        "RNMAPBOX_DOWNLOAD_TOKEN": "sk.eyJ1IjoiYWFzaGlzaHNhcGtvdGExNCIsImEiOiJjbWt2dGZmbXUwYWhrM2Nvd2FvdHhkb2V4In0.A70ubbw_OtRyT0Wqw9-F0w"
       },
       "ios": {
         "simulator": false
@@ -19,13 +20,15 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "RNMAPBOX_DOWNLOAD_TOKEN": "RNMAPBOX_DOWNLOAD_TOKEN"
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
+        "RNMAPBOX_DOWNLOAD_TOKEN": "sk.eyJ1IjoiYWFzaGlzaHNhcGtvdGExNCIsImEiOiJjbWt2dGZmbXUwYWhrM2Nvd2FvdHhkb2V4In0.A70ubbw_OtRyT0Wqw9-F0w"
       }
     },
     "production": {
       "distribution": "store",
       "env": {
-        "RNMAPBOX_DOWNLOAD_TOKEN": "RNMAPBOX_DOWNLOAD_TOKEN"
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
+        "RNMAPBOX_DOWNLOAD_TOKEN": "sk.eyJ1IjoiYWFzaGlzaHNhcGtvdGExNCIsImEiOiJjbWt2dGZmbXUwYWhrM2Nvd2FvdHhkb2V4In0.A70ubbw_OtRyT0Wqw9-F0w"
       }
     }
   }

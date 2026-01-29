@@ -3,52 +3,54 @@
     "name": "Estes Park Guide",
     "slug": "estes-park-guide",
     "version": "1.0.0",
-    "scheme": "com.yourname.estespark",
+    "scheme": "estesparkguide",
+    "newArchEnabled": false,
     "ios": {
       "bundleIdentifier": "com.yourname.estespark",
       "supportsTablet": true,
+      "buildNumber": "9",
       "infoPlist": {
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to take photos of trails.",
-        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos to upload trail reviews.",
-        "NSLocationWhenInUseUsageDescription": "This app needs your location to show nearby trails."
+        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos.",
+        "NSLocationWhenInUseUsageDescription": "This app needs your location to show nearby trails.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs your location for navigation."
       }
-    },
-    "android": {
-      "package": "com.yourname.estespark",
-      "permissions": [
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
-      ]
     },
     "plugins": [
       "expo-router",
       "expo-image-picker",
       "expo-location",
       "expo-camera",
+      "expo-font",
       [
         "expo-build-properties",
         {
           "android": {
-         "kotlinVersion": "2.0.0"
+            "kotlinVersion": "2.0.21",
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 34,
+            "buildToolsVersion": "35.0.0"
+          },
+          "ios": {
+            "deploymentTarget": "15.1",
+            "useFrameworks": "static"
           }
         }
       ],
       [
         "@rnmapbox/maps",
         {
-          "RNMapboxMapsImpl": "mapbox",
-          "RNMAPBOX_MAPS_DOWNLOAD_TOKEN": "sk.eyJ1IjoiYWFzaGlzaHNhcGtvdGExNCIsImEiOiJjbWt2dGZmbXUwYWhrM2Nvd2FvdHhkb2V4In0.A70ubbw_OtRyT0Wqw9-F0w"
+          "RNMapboxMapsImpl": "mapbox"
         }
       ]
     ],
-    "extra": {
-      "eas": {
-        "projectId": "bf7e7caf-5b5a-48b9-978e-33654726f480"
-      }
+    "android": {
+      "package": "com.yourname.estespark",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA"
+      ]
     }
   }
 }

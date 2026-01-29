@@ -30,7 +30,7 @@
   "include": [
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "src/components/trail/TrailRouteOverlay.tsx.bak"  ],
   "exclude": [
     "node_modules"
   ]

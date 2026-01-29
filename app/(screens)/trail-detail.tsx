@@ -15,6 +15,7 @@ import TrailWeather from '../../src/components/trail/TrailWeather';
 import ReviewsList from '../../src/components/trail/ReviewsList';
 import FloatingActions from '../../src/components/trail/FloatingActions';
 import DifficultyBadge from '../../src/components/trail/DifficultyBadge';
+import { confirmAndNavigate } from '../../src/utils/navigation';
 
 export default function TrailDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -100,19 +101,13 @@ export default function TrailDetailScreen() {
     }
   };
 
-  const handleStartTrail = () => {
-    if (!user || !trail) return;
-    router.push({
-      pathname: '/tabs/map',
-      params: { 
-        trailId: id,
-        mode: 'navigate',
-        lat: trail.start_lat,
-        lng: trail.start_lng,
-        name: trail.name
-      }
-    });
-  };
+const handleStartTrail = () => {
+  confirmAndNavigate({
+    latitude: trail.trailhead_lat,
+    longitude: trail.trailhead_lon,
+    trailName: trail.name,
+  });
+};
 
   const getParkName = () => {
     if (!trail) return 'Estes Park, Colorado';

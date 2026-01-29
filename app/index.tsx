@@ -1,36 +1,28 @@
 import { useEffect } from 'react';
-import { router } from 'expo-router';
+import { router, useRootNavigationState } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
 import { COLORS } from '../src/constants/colors';
 
 export default function Index() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
+  const navigationState = useRootNavigationState();
 
   useEffect(() => {
-    if (!loading) {
-      // Always show welcome screen on app start
-      // User can choose to login or skip
-      router.replace('/(auth)/welcome');
-    }
-  }, [loading]);
+    // Check if navigation is ready AND auth has finished loading
+    if (navigationState?.key && !loading) {
+      const timeout = setTimeout(() => {
+        // Use a relative path to avoid "group" naming conflicts
+        router.replace('/welcome'); 
+      }, 50);
 
-  // Show loading while checking auth
+      return () => clearTimeout(timeout);
+    }
+  }, [loading, navigationState?.key]);
+
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
-      <ActivityIndicator size="large" color={COLORS.primary} />
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS?.background || '#fff' }}>
+      <ActivityIndicator size="large" color={COLORS?.primary || '#000'} />
     </View>
   );
 }
-
-
-
-
-// import { Redirect } from "expo-router";
-
-// export default function RootIndex() {
-//   return <Redirect href="/tabs" />;
-// }
-
-
-

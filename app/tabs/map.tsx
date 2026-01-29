@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Mapbox from '@rnmapbox/maps';
@@ -13,6 +13,7 @@ export default function MapScreen() {
   const [trail, setTrail] = useState<any>(null);
   const [is3DMode, setIs3DMode] = useState(false);
   const [mapStyle, setMapStyle] = useState<string>(Mapbox.StyleURL.Outdoors);
+  const [isNavigating, setIsNavigating] = useState(false);
   
   const trailId = params.trailId as string;
   const mode = params.mode as string;
@@ -21,7 +22,16 @@ export default function MapScreen() {
     if (trailId) {
       fetchTrailData();
     }
-  }, [trailId]);
+    
+    if (mode === 'navigate') {
+      setIsNavigating(true);
+      Alert.alert(
+        'Navigation Started',
+        'Follow the trail route on the map. Your location will update in real-time.',
+        [{ text: 'Got it!' }]
+      );
+    }
+  }, [trailId, mode]);
 
   const fetchTrailData = async () => {
     try {
@@ -61,21 +71,25 @@ export default function MapScreen() {
         styleURL={mapStyle}
       >
         <Mapbox.Camera
-          zoomLevel={14}
+          zoomLevel={isNavigating ? 15 : 14}
           centerCoordinate={centerCoords}
           pitch={is3DMode ? 60 : 0}
           animationDuration={1000}
         />
 
-        <Mapbox.LocationPuck
-          pulsing={{ isEnabled: true }}
-          puckBearingEnabled
-          puckBearing="heading"
-        />
-
-        {trail && <TrailRouteOverlay trail={trail} isNavigating={mode === 'navigate'} />}
+        {/* Trail Route */}
+        {trail && <TrailRouteOverlay trail={trail} isNavigating={isNavigating} />}
       </Mapbox.MapView>
 
+      {/* Navigation Status Banner */}
+      {isNavigating && (
+        <View style={mapStyles.navBanner}>
+          <View style={mapStyles.navDot} />
+          <Text style={mapStyles.navText}>Navigating to {trail?.name}</Text>
+        </View>
+      )}
+
+      {/* 3D Toggle Button */}
       <TouchableOpacity
         style={mapStyles.button3D}
         onPress={toggle3D}
@@ -87,6 +101,7 @@ export default function MapScreen() {
         </Text>
       </TouchableOpacity>
 
+      {/* Layer Toggle Button */}
       <TouchableOpacity
         style={mapStyles.buttonLayers}
         onPress={toggleMapStyle}
@@ -95,6 +110,7 @@ export default function MapScreen() {
         <Ionicons name="layers-outline" size={24} color="#fff" />
       </TouchableOpacity>
 
+      {/* Trail Info Card */}
       {trail && (
         <View style={mapStyles.trailInfoCard}>
           <View style={mapStyles.trailInfo}>

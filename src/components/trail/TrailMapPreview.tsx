@@ -1,72 +1,78 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Mapbox from '@rnmapbox/maps';
-import { trailMapPreviewStyles } from '../../styles/components/trailMapPreview.styles';
+import { useRouter } from 'expo-router';
 import { COLORS } from '../../constants/colors';
+import { trailMapPreviewStyles } from '../../styles/components/trailMapPreview.styles';
 
 interface TrailMapPreviewProps {
   trail: any;
 }
 
 export default function TrailMapPreview({ trail }: TrailMapPreviewProps) {
-  const [mapReady, setMapReady] = useState(false);
+  const router = useRouter();
 
-  const handleFullMap = () => {
+  if (!trail) return null;
+
+  const centerLat = trail.trailhead_lat || 40.3772;
+  const centerLon = trail.trailhead_lon || -105.5217;
+
+  const hasRouteCoordinates = trail.route_coordinates && 
+                               trail.route_coordinates.coordinates && 
+                               trail.route_coordinates.coordinates.length > 0;
+
+  let routeCoordinates: number[][] = [];
+  if (hasRouteCoordinates) {
+    routeCoordinates = trail.route_coordinates.coordinates.map((coord: number[]) => {
+      return [coord[0], coord[1]];
+    });
+  }
+
+  const handleViewFullMap = () => {
     router.push({
-      pathname: '/tabs/map',
-      params: { 
-        trailId: trail.id,
-        mode: 'preview',
-        lat: trail.start_lat,
-        lng: trail.start_lng,
-        name: trail.name
-      }
+      pathname: '/(screens)/trail-preview',
+      params: { id: trail.id }
     });
   };
 
-  const centerCoords = trail.start_lat && trail.start_lng
-    ? [trail.start_lng, trail.start_lat]
-    : [-105.5217, 40.3772];
+  const handlePreviewTrail = () => {
+    router.push({
+      pathname: '/(screens)/trail-preview',
+      params: { id: trail.id }
+    });
+  };
 
-  // Create route line
-  const routeCoordinates = trail.start_lat && trail.start_lng && trail.end_lat && trail.end_lng
-    ? [[trail.start_lng, trail.start_lat], [trail.end_lng, trail.end_lat]]
-    : null;
+  const trailColor = '#8B6F47';
 
   return (
     <View style={trailMapPreviewStyles.container}>
       <View style={trailMapPreviewStyles.header}>
         <Text style={trailMapPreviewStyles.title}>Trail Map</Text>
-        <TouchableOpacity 
-          onPress={handleFullMap}
-          style={trailMapPreviewStyles.viewButton}
-          activeOpacity={0.7}
-        >
-          <Text style={trailMapPreviewStyles.viewButtonText}>View Full Map</Text>
+        <TouchableOpacity onPress={handleViewFullMap} style={trailMapPreviewStyles.viewFullButton}>
+          <Text style={trailMapPreviewStyles.viewFullText}>View Full Map</Text>
           <Ionicons name="arrow-forward" size={16} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
-      
+
       <View style={trailMapPreviewStyles.mapContainer}>
         <Mapbox.MapView
           style={trailMapPreviewStyles.map}
           styleURL={Mapbox.StyleURL.Outdoors}
           scrollEnabled={false}
-          zoomEnabled={false}
           pitchEnabled={false}
           rotateEnabled={false}
-          onDidFinishLoadingMap={() => setMapReady(true)}
+          zoomEnabled={false}
+          attributionEnabled={true}
+          logoEnabled={true}
         >
           <Mapbox.Camera
             zoomLevel={13}
-            centerCoordinate={centerCoords}
+            centerCoordinate={[centerLon, centerLat]}
             animationDuration={0}
           />
 
-          {/* Trail Route Line - Light Brown */}
-          {mapReady && routeCoordinates && (
+          {hasRouteCoordinates && routeCoordinates.length > 1 && (
             <Mapbox.ShapeSource
               id="trailRouteSource"
               shape={{
@@ -79,10 +85,20 @@ export default function TrailMapPreview({ trail }: TrailMapPreviewProps) {
               }}
             >
               <Mapbox.LineLayer
+                id="trailRouteShadow"
+                style={{
+                  lineColor: '#000',
+                  lineWidth: 5,
+                  lineCap: 'round',
+                  lineJoin: 'round',
+                  lineOpacity: 0.3,
+                }}
+              />
+              <Mapbox.LineLayer
                 id="trailRouteLine"
                 style={{
-                  lineColor: '#8B6F47',
-                  lineWidth: 4,
+                  lineColor: trailColor,
+                  lineWidth: 3,
                   lineCap: 'round',
                   lineJoin: 'round',
                 }}
@@ -90,49 +106,63 @@ export default function TrailMapPreview({ trail }: TrailMapPreviewProps) {
             </Mapbox.ShapeSource>
           )}
 
-          {/* Start Point */}
-          {trail.start_lat && trail.start_lng && (
-            <Mapbox.PointAnnotation
-              id="trailStart"
-              coordinate={[trail.start_lng, trail.start_lat]}
+          {hasRouteCoordinates && routeCoordinates.length > 0 && (
+            <Mapbox.ShapeSource
+              id="startPointSource"
+              shape={{
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  type: 'Point',
+                  coordinates: routeCoordinates[0],
+                },
+              }}
             >
-              <View style={trailMapPreviewStyles.startMarker}>
-                <View style={trailMapPreviewStyles.startMarkerInner} />
-              </View>
-            </Mapbox.PointAnnotation>
+              <Mapbox.CircleLayer
+                id="startPointCircle"
+                style={{
+                  circleRadius: 8,
+                  circleColor: COLORS.primary,
+                  circleStrokeWidth: 2,
+                  circleStrokeColor: '#fff',
+                }}
+              />
+            </Mapbox.ShapeSource>
           )}
 
-          {/* End Point */}
-          {trail.end_lat && trail.end_lng && 
-           (trail.end_lat !== trail.start_lat || trail.end_lng !== trail.start_lng) && (
-            <Mapbox.PointAnnotation
-              id="trailEnd"
-              coordinate={[trail.end_lng, trail.end_lat]}
+          {hasRouteCoordinates && routeCoordinates.length > 1 && (
+            <Mapbox.ShapeSource
+              id="endPointSource"
+              shape={{
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  type: 'Point',
+                  coordinates: routeCoordinates[routeCoordinates.length - 1],
+                },
+              }}
             >
-              <View style={trailMapPreviewStyles.endMarker}>
-                <Ionicons name="flag" size={16} color="#fff" />
-              </View>
-            </Mapbox.PointAnnotation>
+              <Mapbox.CircleLayer
+                id="endPointCircle"
+                style={{
+                  circleRadius: 6,
+                  circleColor: '#FF3B30',
+                  circleStrokeWidth: 2,
+                  circleStrokeColor: '#fff',
+                }}
+              />
+            </Mapbox.ShapeSource>
           )}
         </Mapbox.MapView>
 
-        {/* Overlay Button */}
-        <TouchableOpacity 
-          style={trailMapPreviewStyles.overlayButton}
-          onPress={handleFullMap}
-          activeOpacity={0.9}
-        >
-          <View style={trailMapPreviewStyles.buttonContent}>
-            <Ionicons name="map" size={22} color={COLORS.primary} />
-            <Text style={trailMapPreviewStyles.buttonText}>Preview Trail</Text>
-          </View>
+        <TouchableOpacity style={trailMapPreviewStyles.toggle3D}>
+          <Ionicons name="cube-outline" size={20} color="#666" />
         </TouchableOpacity>
 
-        {/* 3D Hint */}
-        <View style={trailMapPreviewStyles.hint3D}>
-          <Ionicons name="cube-outline" size={16} color="#fff" />
-          <Text style={trailMapPreviewStyles.hintText}>Tap for 3D view</Text>
-        </View>
+        <TouchableOpacity style={trailMapPreviewStyles.previewButton} onPress={handlePreviewTrail}>
+          <Ionicons name="play" size={16} color="#333" />
+          <Text style={trailMapPreviewStyles.previewText}>Preview Trail</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
