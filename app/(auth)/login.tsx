@@ -23,8 +23,21 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   const navigateAfterAuth = () => {
-    // Always go to hiking tab for now - simplest approach
-    router.replace('/tabs/hiking');
+    if (returnTo === 'trail' && trailId) {
+      // First go to hiking tab, then push to trail detail
+      // This creates a clean stack: Hiking → Trail Detail
+      router.replace('/tabs/hiking');
+      setTimeout(() => {
+        router.push({
+          pathname: '/(screens)/trail-detail',
+          params: { id: trailId }
+        } as any);
+      }, 50);
+    } else if (returnTo === 'favorites') {
+      router.replace('/tabs/favorites');
+    } else {
+      router.replace('/tabs/hiking');
+    }
   };
 
   const handleLogin = async () => {

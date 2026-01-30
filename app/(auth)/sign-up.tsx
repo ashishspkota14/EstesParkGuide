@@ -27,18 +27,21 @@ export default function SignUpScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const navigateAfterAuth = () => {
-    // Small delay to let auth state settle
-    setTimeout(() => {
-      console.log('navigateAfterAuth:', { returnTo, trailId });
-      
-      if (returnTo === 'trail' && trailId) {
-        router.back();
-      } else if (returnTo === 'favorites') {
-        router.back();
-      } else {
-        router.replace('/tabs/hiking');
-      }
-    }, 150);
+    if (returnTo === 'trail' && trailId) {
+      // First go to hiking tab, then push to trail detail
+      // This creates a clean stack: Hiking → Trail Detail
+      router.replace('/tabs/hiking');
+      setTimeout(() => {
+        router.push({
+          pathname: '/(screens)/trail-detail',
+          params: { id: trailId }
+        } as any);
+      }, 50);
+    } else if (returnTo === 'favorites') {
+      router.replace('/tabs/favorites');
+    } else {
+      router.replace('/tabs/hiking');
+    }
   };
 
   const handleSignUp = async () => {
