@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
 import { loginStyles } from '../../src/styles/screens/login.styles';
@@ -18,12 +18,28 @@ import { COLORS } from '../../src/constants/colors';
 
 export default function SignUpScreen() {
   const { signUp, loading } = useAuth();
+  const { returnTo, trailId } = useLocalSearchParams<{ returnTo?: string; trailId?: string }>();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const navigateAfterAuth = () => {
+    // Small delay to let auth state settle
+    setTimeout(() => {
+      console.log('navigateAfterAuth:', { returnTo, trailId });
+      
+      if (returnTo === 'trail' && trailId) {
+        router.back();
+      } else if (returnTo === 'favorites') {
+        router.back();
+      } else {
+        router.replace('/tabs/hiking');
+      }
+    }, 150);
+  };
 
   const handleSignUp = async () => {
     // Validation
@@ -45,23 +61,27 @@ export default function SignUpScreen() {
     const result = await signUp(email, password, name);
     
     if (result.success) {
-      // Only show success if there's no error message
+      // Navigate to login with params preserved
       if (!result.error) {
         Alert.alert(
           'Success',
           'Account created! Please check your email to verify your account.',
-          [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+          [{ text: 'OK', onPress: () => router.replace({
+            pathname: '/(auth)/login',
+            params: { returnTo, trailId }
+          } as any) }]
         );
       } else {
-        // Success with warning
         Alert.alert(
           'Account Created',
           result.error,
-          [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+          [{ text: 'OK', onPress: () => router.replace({
+            pathname: '/(auth)/login',
+            params: { returnTo, trailId }
+          } as any) }]
         );
       }
     } else {
-      // Failed - show error
       Alert.alert('Sign Up Failed', result.error || 'Could not create account');
     }
   };
@@ -187,21 +207,24 @@ export default function SignUpScreen() {
             )}
           </TouchableOpacity>
 
-          {/* Sign In Link */}
+          {/* Sign In Link - Pass returnTo and trailId to login */}
           <View style={loginStyles.signUpContainer}>
             <Text style={loginStyles.signUpText}>Already have an account? </Text>
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => router.push({
+                pathname: '/(auth)/login',
+                params: { returnTo, trailId }
+              })}
               activeOpacity={0.7}
             >
               <Text style={loginStyles.signUpLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Skip Sign Up */}
+          {/* Skip Sign Up - Go back or to hiking */}
           <TouchableOpacity
             style={loginStyles.skipButton}
-            onPress={() => router.replace('/tabs/hiking')}
+            onPress={navigateAfterAuth}
             activeOpacity={0.7}
           >
             <Text style={loginStyles.skipButtonText}>Continue as Guest</Text>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { reviewsListStyles } from '../../styles/components/reviewsList.styles';
 import { COLORS } from '../../constants/colors';
@@ -20,10 +21,25 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
 
   useEffect(() => {
     if (user && reviews) {
-      const existing = reviews.find(r => r.users?.id === user.id);
+      // Check using profiles.id (from the joined query)
+      const existing = reviews.find(r => r.profiles?.id === user.id);
       setUserReview(existing || null);
+    } else {
+      setUserReview(null);
     }
   }, [user, reviews]);
+
+  const handleWriteReview = () => {
+    if (!user) {
+      // Redirect guest to login with trail ID
+      router.push({
+        pathname: '/(auth)/login',
+        params: { returnTo: 'trail', trailId: trailId }
+      });
+      return;
+    }
+    setShowForm(true);
+  };
 
   const handleEditReview = () => {
     setEditingReview(userReview);
@@ -36,11 +52,16 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
     onReviewChanged();
   };
 
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingReview(null);
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
@@ -50,9 +71,24 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
     return `${Math.floor(diffDays / 365)} years ago`;
   };
 
+  const renderStars = (rating: number) => {
+    return (
+      <View style={reviewsListStyles.stars}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Ionicons
+            key={star}
+            name={star <= rating ? 'star' : 'star-outline'}
+            size={14}
+            color={star <= rating ? '#FFB800' : '#ddd'}
+          />
+        ))}
+      </View>
+    );
+  };
+
   const renderReview = ({ item }: { item: any }) => {
-    const isOwnReview = user && item.users?.id === user.id;
-    const userName = item.users?.full_name || item.users?.email?.split('@')[0] || 'Anonymous';
+    const isOwnReview = user && item.profiles?.id === user.id;
+    const userName = item.profiles?.full_name || 'Anonymous Hiker';
     const userInitial = userName.charAt(0).toUpperCase();
     const reviewPhotos = item.review_photos || [];
 
@@ -60,8 +96,8 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
       <View style={reviewsListStyles.reviewCard}>
         <View style={reviewsListStyles.reviewHeader}>
           <View style={reviewsListStyles.userRow}>
-            {item.users?.avatar_url ? (
-              <Image source={{ uri: item.users.avatar_url }} style={reviewsListStyles.avatar} />
+            {item.profiles?.avatar_url ? (
+              <Image source={{ uri: item.profiles.avatar_url }} style={reviewsListStyles.avatar} />
             ) : (
               <View style={reviewsListStyles.avatarPlaceholder}>
                 <Text style={reviewsListStyles.avatarText}>{userInitial}</Text>
@@ -69,23 +105,14 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
             )}
             <View style={reviewsListStyles.userInfo}>
               <Text style={reviewsListStyles.userName}>{userName}</Text>
-              <View style={reviewsListStyles.stars}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Ionicons
-                    key={star}
-                    name={star <= item.rating ? 'star' : 'star-outline'}
-                    size={14}
-                    color={star <= item.rating ? '#FFB800' : '#ddd'}
-                  />
-                ))}
-              </View>
+              {renderStars(item.rating)}
             </View>
           </View>
           <View style={reviewsListStyles.reviewMeta}>
             <Text style={reviewsListStyles.reviewDate}>{formatDate(item.created_at)}</Text>
             {isOwnReview && (
-              <TouchableOpacity onPress={handleEditReview}>
-                <Ionicons name="create-outline" size={20} color={COLORS.primary} />
+              <TouchableOpacity onPress={handleEditReview} style={reviewsListStyles.editButton}>
+                <Ionicons name="create-outline" size={18} color={COLORS.primary} />
               </TouchableOpacity>
             )}
           </View>
@@ -102,59 +129,58 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
                 style={reviewsListStyles.reviewPhoto}
               />
             ))}
-            {reviewPhotos.length > 3 && (
-              <View style={reviewsListStyles.morePhotos}>
-                <Text style={reviewsListStyles.morePhotosText}>+{reviewPhotos.length - 3}</Text>
-              </View>
-            )}
           </View>
         )}
       </View>
     );
   };
 
+  // Show form when editing or writing
+  if (showForm) {
+    return (
+      <View style={reviewsListStyles.container}>
+        <ReviewForm
+          trailId={trailId}
+          existingReview={editingReview}
+          onSubmitSuccess={handleFormSuccess}
+          onCancel={handleFormCancel}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={reviewsListStyles.container}>
       <View style={reviewsListStyles.header}>
         <Text style={reviewsListStyles.title}>
-          Reviews ({reviews.length})
+          Reviews {reviews.length > 0 && `(${reviews.length})`}
         </Text>
       </View>
 
-      {/* Write/Edit Review Section */}
-      {user && (
-        <View style={reviewsListStyles.writeReviewSection}>
-          {showForm ? (
-            <ReviewForm
-              trailId={trailId}
-              existingReview={editingReview}
-              onSubmitSuccess={handleFormSuccess}
-              onCancel={() => {
-                setShowForm(false);
-                setEditingReview(null);
-              }}
-            />
-          ) : userReview ? (
-            <TouchableOpacity
-              style={reviewsListStyles.editPrompt}
-              onPress={handleEditReview}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="create-outline" size={20} color={COLORS.primary} />
-              <Text style={reviewsListStyles.editPromptText}>Edit your review</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={reviewsListStyles.writePrompt}
-              onPress={() => setShowForm(true)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="create-outline" size={20} color={COLORS.primary} />
-              <Text style={reviewsListStyles.writePromptText}>Write a review</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
+      {/* Write/Edit Review Button */}
+      <View style={reviewsListStyles.writeReviewSection}>
+        {user && userReview ? (
+          // User has already reviewed - show edit option
+          <TouchableOpacity
+            style={reviewsListStyles.editPrompt}
+            onPress={handleEditReview}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="create-outline" size={18} color={COLORS.primary} />
+            <Text style={reviewsListStyles.editPromptText}>Edit Your Review</Text>
+          </TouchableOpacity>
+        ) : (
+          // User hasn't reviewed OR is guest - show write prompt
+          <TouchableOpacity
+            style={reviewsListStyles.writePrompt}
+            onPress={handleWriteReview}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="create-outline" size={18} color={COLORS.white} />
+            <Text style={reviewsListStyles.writePromptText}>Write a Review</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       {/* Reviews List */}
       {reviews.length > 0 ? (
@@ -163,10 +189,13 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
           keyExtractor={(item) => item.id}
           renderItem={renderReview}
           scrollEnabled={false}
+          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         />
       ) : (
         <View style={reviewsListStyles.emptyState}>
-          <Ionicons name="chatbubble-outline" size={48} color={COLORS.border} />
+          <View style={reviewsListStyles.emptyIconWrap}>
+            <Ionicons name="chatbubbles-outline" size={40} color={COLORS.primary} />
+          </View>
           <Text style={reviewsListStyles.emptyTitle}>No Reviews Yet</Text>
           <Text style={reviewsListStyles.emptyText}>
             Be the first to share your experience on this trail!

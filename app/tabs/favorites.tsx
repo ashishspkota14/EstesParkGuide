@@ -86,7 +86,10 @@ export default function FavoritesScreen() {
           </Text>
           <TouchableOpacity
             style={favoritesStyles.signInButton}
-            onPress={() => router.push('/(auth)/login')}
+            onPress={() => router.push({
+              pathname: '/(auth)/login',
+              params: { returnTo: 'favorites' }
+            })}
             activeOpacity={0.8}
           >
             <Text style={favoritesStyles.signInButtonText}>Sign In</Text>

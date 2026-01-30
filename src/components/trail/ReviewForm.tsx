@@ -20,10 +20,19 @@ export default function ReviewForm({ trailId, existingReview, onSubmitSuccess, o
   const [comment, setComment] = useState(existingReview?.comment || '');
   const [photos, setPhotos] = useState<string[]>(existingReview?.review_photos?.map((p: any) => p.photo_url) || []);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isEditing = !!existingReview;
 
   const pickImage = async () => {
     if (photos.length >= 3) {
       Alert.alert('Limit Reached', 'You can upload a maximum of 3 photos');
+      return;
+    }
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please allow access to your photo library');
       return;
     }
 
@@ -39,6 +48,37 @@ export default function ReviewForm({ trailId, existingReview, onSubmitSuccess, o
     }
   };
 
+  const takePhoto = async () => {
+    if (photos.length >= 3) {
+      Alert.alert('Limit Reached', 'You can upload a maximum of 3 photos');
+      return;
+    }
+
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please allow access to your camera');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setPhotos([...photos, result.assets[0].uri]);
+    }
+  };
+
+  const showPhotoOptions = () => {
+    Alert.alert('Add Photo', 'Choose an option', [
+      { text: 'Take Photo', onPress: takePhoto },
+      { text: 'Choose from Library', onPress: pickImage },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
   const removePhoto = (index: number) => {
     setPhotos(photos.filter((_, i) => i !== index));
   };
@@ -50,26 +90,33 @@ export default function ReviewForm({ trailId, existingReview, onSubmitSuccess, o
     }
 
     if (!comment.trim()) {
-      Alert.alert('Comment Required', 'Please write a review');
+      Alert.alert('Review Required', 'Please write a review comment');
+      return;
+    }
+
+    if (comment.trim().length < 10) {
+      Alert.alert('Review Too Short', 'Please write at least 10 characters');
       return;
     }
 
     setSubmitting(true);
 
     try {
-      if (existingReview) {
+      if (isEditing) {
         // Update existing review
         const { error } = await supabase
           .from('trail_reviews')
           .update({
             rating,
             comment: comment.trim(),
+            updated_at: new Date().toISOString(),
           })
-          .eq('id', existingReview.id);
+          .eq('id', existingReview.id)
+          .eq('user_id', user?.id); // Security check
 
         if (error) throw error;
 
-        // Update photos (delete old, insert new)
+        // Update photos: delete old ones, insert new ones
         await supabase
           .from('review_photos')
           .delete()
@@ -100,7 +147,7 @@ export default function ReviewForm({ trailId, existingReview, onSubmitSuccess, o
         if (reviewError) throw reviewError;
 
         // Insert photos
-        if (photos.length > 0) {
+        if (photos.length > 0 && reviewData) {
           const photoInserts = photos.map(photo => ({
             review_id: reviewData.id,
             photo_url: photo,
@@ -114,105 +161,195 @@ export default function ReviewForm({ trailId, existingReview, onSubmitSuccess, o
       onSubmitSuccess();
     } catch (error: any) {
       console.error('Review submit error:', error);
-      Alert.alert('Error', error.message || 'Failed to submit review');
+      
+      // Handle duplicate review error
+      if (error.code === '23505') {
+        Alert.alert('Already Reviewed', 'You have already reviewed this trail. Please edit your existing review.');
+      } else {
+        Alert.alert('Error', error.message || 'Failed to submit review');
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Review',
+      'Are you sure you want to delete your review? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              // Photos will be auto-deleted due to ON DELETE CASCADE
+              const { error } = await supabase
+                .from('trail_reviews')
+                .delete()
+                .eq('id', existingReview.id)
+                .eq('user_id', user?.id); // Security check
+
+              if (error) throw error;
+
+              Alert.alert('Deleted', 'Your review has been deleted');
+              onSubmitSuccess();
+            } catch (error: any) {
+              console.error('Delete error:', error);
+              Alert.alert('Error', error.message || 'Failed to delete review');
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={reviewFormStyles.container}>
+      {/* Header */}
       <View style={reviewFormStyles.header}>
         <Text style={reviewFormStyles.title}>
-          {existingReview ? 'Edit Your Review' : 'Write a Review'}
+          {isEditing ? 'Edit Your Review' : 'Write a Review'}
         </Text>
         {onCancel && (
-          <TouchableOpacity onPress={onCancel}>
+          <TouchableOpacity onPress={onCancel} style={reviewFormStyles.closeButton}>
             <Ionicons name="close" size={24} color={COLORS.text} />
           </TouchableOpacity>
         )}
       </View>
 
       {/* Star Rating */}
-      <View style={reviewFormStyles.ratingContainer}>
-        <Text style={reviewFormStyles.label}>Rating *</Text>
-        <View style={reviewFormStyles.stars}>
+      <View style={reviewFormStyles.section}>
+        <Text style={reviewFormStyles.label}>Your Rating</Text>
+        <View style={reviewFormStyles.starsRow}>
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity
               key={star}
               onPress={() => setRating(star)}
               activeOpacity={0.7}
+              style={reviewFormStyles.starButton}
             >
               <Ionicons
                 name={star <= rating ? 'star' : 'star-outline'}
-                size={36}
-                color={star <= rating ? '#FFB800' : '#ddd'}
+                size={38}
+                color={star <= rating ? '#FFB800' : COLORS.border}
               />
             </TouchableOpacity>
           ))}
         </View>
+        {rating > 0 && (
+          <Text style={reviewFormStyles.ratingText}>
+            {rating === 1 && 'Poor'}
+            {rating === 2 && 'Fair'}
+            {rating === 3 && 'Good'}
+            {rating === 4 && 'Very Good'}
+            {rating === 5 && 'Excellent'}
+          </Text>
+        )}
       </View>
 
-      {/* Comment */}
-      <View style={reviewFormStyles.commentContainer}>
-        <Text style={reviewFormStyles.label}>Your Review *</Text>
+      {/* Comment Input */}
+      <View style={reviewFormStyles.section}>
+        <Text style={reviewFormStyles.label}>Your Review</Text>
         <TextInput
-          style={reviewFormStyles.commentInput}
+          style={reviewFormStyles.textInput}
           multiline
-          numberOfLines={6}
-          placeholder="Share your experience on this trail..."
+          numberOfLines={5}
+          placeholder="Share your experience on this trail... What did you enjoy? Any tips for other hikers?"
           placeholderTextColor={COLORS.textLight}
           value={comment}
           onChangeText={setComment}
           textAlignVertical="top"
+          maxLength={1000}
         />
+        <Text style={reviewFormStyles.charCount}>
+          {comment.length}/1000
+        </Text>
       </View>
 
       {/* Photo Upload */}
-      <View style={reviewFormStyles.photosContainer}>
-        <Text style={reviewFormStyles.label}>Photos (Max 3)</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <View style={reviewFormStyles.section}>
+        <Text style={reviewFormStyles.label}>Add Photos (Optional)</Text>
+        <Text style={reviewFormStyles.labelHint}>Share up to 3 photos from your hike</Text>
+        
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={reviewFormStyles.photosScroll}>
           <View style={reviewFormStyles.photosRow}>
             {photos.map((photo, index) => (
               <View key={index} style={reviewFormStyles.photoWrapper}>
-                <Image source={{ uri: photo }} style={reviewFormStyles.photo} />
+                <Image source={{ uri: photo }} style={reviewFormStyles.photoPreview} />
                 <TouchableOpacity
-                  style={reviewFormStyles.removePhoto}
+                  style={reviewFormStyles.removePhotoButton}
                   onPress={() => removePhoto(index)}
                 >
                   <Ionicons name="close-circle" size={24} color="#FF3B30" />
                 </TouchableOpacity>
               </View>
             ))}
+            
             {photos.length < 3 && (
               <TouchableOpacity
-                style={reviewFormStyles.addPhoto}
-                onPress={pickImage}
+                style={reviewFormStyles.addPhotoButton}
+                onPress={showPhotoOptions}
                 activeOpacity={0.7}
               >
-                <Ionicons name="camera-outline" size={32} color={COLORS.textLight} />
-                <Text style={reviewFormStyles.addPhotoText}>Add Photo</Text>
+                <Ionicons name="camera-outline" size={28} color={COLORS.primary} />
+                <Text style={reviewFormStyles.addPhotoText}>Add</Text>
               </TouchableOpacity>
             )}
           </View>
         </ScrollView>
       </View>
 
-      {/* Submit Button */}
-      <TouchableOpacity
-        style={[reviewFormStyles.submitButton, submitting && reviewFormStyles.submitButtonDisabled]}
-        onPress={handleSubmit}
-        disabled={submitting}
-        activeOpacity={0.8}
-      >
-        {submitting ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={reviewFormStyles.submitButtonText}>
-            {existingReview ? 'Update Review' : 'Post Review'}
-          </Text>
+      {/* Action Buttons */}
+      <View style={reviewFormStyles.actions}>
+        {/* Submit Button */}
+        <TouchableOpacity
+          style={[
+            reviewFormStyles.submitButton,
+            (submitting || deleting) && reviewFormStyles.buttonDisabled
+          ]}
+          onPress={handleSubmit}
+          disabled={submitting || deleting}
+          activeOpacity={0.8}
+        >
+          {submitting ? (
+            <ActivityIndicator color={COLORS.white} />
+          ) : (
+            <>
+              <Ionicons name="checkmark-circle-outline" size={20} color={COLORS.white} />
+              <Text style={reviewFormStyles.submitButtonText}>
+                {isEditing ? 'Update Review' : 'Post Review'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        {/* Delete Button (only when editing) */}
+        {isEditing && (
+          <TouchableOpacity
+            style={[
+              reviewFormStyles.deleteButton,
+              (submitting || deleting) && reviewFormStyles.buttonDisabled
+            ]}
+            onPress={handleDelete}
+            disabled={submitting || deleting}
+            activeOpacity={0.8}
+          >
+            {deleting ? (
+              <ActivityIndicator color="#E74C3C" />
+            ) : (
+              <>
+                <Ionicons name="trash-outline" size={18} color="#E74C3C" />
+                <Text style={reviewFormStyles.deleteButtonText}>Delete Review</Text>
+              </>
+            )}
+          </TouchableOpacity>
         )}
-      </TouchableOpacity>
+      </View>
     </View>
   );
 }

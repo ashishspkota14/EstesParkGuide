@@ -3,196 +3,315 @@ import { COLORS } from '../../constants/colors';
 
 export const trailWeatherStyles = StyleSheet.create({
   container: {
-    padding: 20,
-    paddingTop: 10,
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
+  
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#1a1a1a',
+    color: COLORS.text,
     marginBottom: 16,
   },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1a1a1a',
-    marginTop: 20,
-    marginBottom: 12,
-  },
+  
   loader: {
-    paddingVertical: 40,
+    height: 100,
+    justifyContent: 'center',
     alignItems: 'center',
   },
+  
+  // Hero Card - Light Green Theme
   heroCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    backgroundColor: `${COLORS.primary}08`, // Very light green
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: `${COLORS.primary}20`,
   },
+  
+  // Selected Day Badge (when viewing future forecast)
+  selectedDayBadge: {
+    backgroundColor: COLORS.primary,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  
+  selectedDayText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  
   currentWeather: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    marginBottom: 20,
+    marginBottom: 14,
   },
+  
   iconContainer: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#FFF9E6',
+    backgroundColor: COLORS.white,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 16,
+    overflow: 'hidden',
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
+  
   tempSection: {
     flex: 1,
   },
+  
   temperature: {
-    fontSize: 48,
-    fontWeight: '900',
-    color: '#1a1a1a',
-    lineHeight: 52,
+    fontSize: 44,
+    fontWeight: '800',
+    color: COLORS.text,
+    lineHeight: 48,
   },
+  
   weatherCondition: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 15,
     fontWeight: '600',
+    color: COLORS.primary,
     marginTop: 2,
   },
+  
+  feelsLike: {
+    fontSize: 13,
+    color: COLORS.textLight,
+    marginTop: 3,
+  },
+  
   statsGrid: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: `${COLORS.primary}15`,
   },
+  
   statBox: {
     flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    borderRadius: 14,
-    padding: 14,
-    gap: 4,
-  },
-  statValue: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: '#1a1a1a',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '600',
-  },
-  forecastScroll: {
-    marginBottom: 8,
-  },
-  forecastDay: {
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 14,
-    marginRight: 10,
-    width: 70,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  dayName: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#1a1a1a',
-    marginBottom: 8,
-  },
-  tempHigh: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#1a1a1a',
-    marginTop: 8,
-  },
-  tempLow: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#999',
-    marginTop: 2,
-  },
-  elevationCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  insightsCard: {
-    backgroundColor: '#E8F5E9',
-    borderRadius: 16,
-    padding: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary,
-  },
-  insightItem: {
-    marginBottom: 10,
-  },
-  insightText: {
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
-  },
-});
-
-export const elevationStyles = StyleSheet.create({
-  container: {
-    paddingVertical: 8,
-  },
-  labelsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  labelBox: {
     alignItems: 'center',
-  },
-  labelBoxPeak: {
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    gap: 8,
+    backgroundColor: COLORS.white,
+    padding: 12,
     borderRadius: 12,
   },
-  labelValue: {
+  
+  statValue: {
     fontSize: 14,
-    fontWeight: '800',
-    color: '#333',
+    fontWeight: '700',
+    color: COLORS.text,
   },
-  labelText: {
+  
+  statLabel: {
     fontSize: 11,
-    color: '#666',
-    fontWeight: '600',
+    color: COLORS.textLight,
+    fontWeight: '500',
   },
-  barsContainer: {
+  
+  // Sunrise/Sunset Row
+  sunTimesRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    height: 70,
-    paddingHorizontal: 4,
+    alignItems: 'center',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: `${COLORS.primary}15`,
   },
-  bar: {
-    width: 6,
-    borderRadius: 3,
-    marginHorizontal: 1,
-  },
-  distanceRow: {
+  
+  sunTimeBox: {
+    flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
+    alignItems: 'center',
+    gap: 8,
   },
-  distanceText: {
+  
+  sunTimeDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: `${COLORS.primary}20`,
+    marginHorizontal: 12,
+  },
+  
+  sunTimeLabel: {
     fontSize: 10,
-    color: '#999',
+    color: COLORS.textLight,
+    fontWeight: '500',
+  },
+  
+  sunTimeValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
+  
+  // 7-Day Forecast - CLICKABLE DESIGN
+  forecastTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  
+  forecastScroll: {
+    marginBottom: 16,
+  },
+  
+  forecastContent: {
+    paddingRight: 20,
+  },
+  
+  // Unselected Day
+  forecastDay: {
+    alignItems: 'center',
+    backgroundColor: `${COLORS.primary}06`,
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    marginRight: 8,
+    minWidth: 64,
+    borderWidth: 1.5,
+    borderColor: `${COLORS.primary}15`,
+  },
+  
+  // Selected Day - Dark Green Highlight
+  forecastDaySelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  
+  dayName: {
+    fontSize: 11,
     fontWeight: '600',
+    color: COLORS.textLight,
+    marginBottom: 6,
+  },
+  
+  dayNameSelected: {
+    color: COLORS.white,
+    fontWeight: '700',
+  },
+  
+  // Icon wrapper for better visual
+  forecastIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  
+  forecastIconWrapSelected: {
+    backgroundColor: `rgba(255,255,255,0.2)`,
+  },
+  
+  tempHigh: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginTop: 4,
+  },
+  
+  tempHighSelected: {
+    color: COLORS.white,
+  },
+  
+  tempLow: {
+    fontSize: 11,
+    color: COLORS.textLight,
+    marginTop: 1,
+  },
+  
+  tempLowSelected: {
+    color: 'rgba(255,255,255,0.7)',
+  },
+  
+  rainChance: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginTop: 6,
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  
+  rainChanceSelected: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  
+  rainChanceText: {
+    fontSize: 10,
+    color: '#1976D2',
+    fontWeight: '600',
+  },
+  
+  rainChanceTextSelected: {
+    color: COLORS.white,
+  },
+  
+  // Today's Trail Condition - COMPACT
+  todayConditionCard: {
+    marginBottom: 0,
+  },
+  
+  todayConditionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  
+  todayConditionEmoji: {
+    fontSize: 22,
+  },
+  
+  todayConditionContent: {
+    flex: 1,
+  },
+  
+  todayConditionLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textLight,
+    marginBottom: 2,
+  },
+  
+  todayConditionText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  
+  // Deprecated
+  todayConditionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 12,
   },
 });

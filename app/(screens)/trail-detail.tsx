@@ -12,6 +12,7 @@ import PhotoCarousel from '../../src/components/trail/PhotoCarousel';
 import TrailStats from '../../src/components/trail/TrailStats';
 import TrailMapPreview from '../../src/components/trail/TrailMapPreview';
 import TrailWeather from '../../src/components/trail/TrailWeather';
+import TrailConditions from '../../src/components/trail/TrailConditions';
 import ReviewsList from '../../src/components/trail/ReviewsList';
 import FloatingActions from '../../src/components/trail/FloatingActions';
 import DifficultyBadge from '../../src/components/trail/DifficultyBadge';
@@ -26,6 +27,7 @@ export default function TrailDetailScreen() {
 
   useEffect(() => {
     if (id) {
+      console.log('📍 Navigating to ID:', id);
       fetchTrailDetails();
       if (user) checkFavoriteStatus();
     }
@@ -43,12 +45,16 @@ export default function TrailDetailScreen() {
             rating,
             comment,
             created_at,
+            user_id,
             profiles (
               id, 
               full_name, 
               avatar_url
             ),
-            review_photos!fk_review (photo_url)
+            review_photos!review_photos_review_id_fkey (
+              id,
+              photo_url
+            )
           )
         `)
         .eq('id', id)
@@ -58,8 +64,7 @@ export default function TrailDetailScreen() {
       setTrail(data);
     } catch (error) {
       console.error('Error fetching trail:', error);
-      // We check for the specific PostgREST ambiguity error in the logs
-      Alert.alert('Error', 'Failed to load trail details. Check database relationships.');
+      Alert.alert('Error', 'Failed to load trail details.');
     } finally {
       setLoading(false);
     }
@@ -84,7 +89,10 @@ export default function TrailDetailScreen() {
   const toggleFavorite = async () => {
     if (!user) {
       Alert.alert('Sign In Required', 'Please sign in to save favorites');
-      router.push('/(auth)/login');
+      router.push({
+        pathname: '/(auth)/login',
+        params: { returnTo: 'trail', trailId: id as string }
+      });
       return;
     }
 
@@ -101,22 +109,33 @@ export default function TrailDetailScreen() {
     }
   };
 
-const handleStartTrail = () => {
-  confirmAndNavigate({
-    latitude: trail.trailhead_lat,
-    longitude: trail.trailhead_lon,
-    trailName: trail.name,
-  });
-};
+  const handleStartTrail = () => {
+    confirmAndNavigate({
+      latitude: trail.trailhead_lat,
+      longitude: trail.trailhead_lon,
+      trailName: trail.name,
+    });
+  };
 
   const getParkName = () => {
-    if (!trail) return 'Estes Park, Colorado';
-    const name = trail.name.toLowerCase();
-    const rmnpTrails = ['bear lake', 'emerald', 'dream', 'sky pond', 'loch'];
-    if (rmnpTrails.some(keyword => name.includes(keyword))) {
-      return 'Rocky Mountain National Park';
-    }
-    return 'Estes Park, Colorado';
+    return trail?.park_area || 'Rocky Mountain National Park';
+  };
+
+  // Collect all review photos to use in carousel
+  const getReviewPhotos = (): string[] => {
+    if (!trail?.trail_reviews) return [];
+    
+    const photos: string[] = [];
+    trail.trail_reviews.forEach((review: any) => {
+      if (review.review_photos && review.review_photos.length > 0) {
+        review.review_photos.forEach((photo: any) => {
+          if (photo.photo_url) {
+            photos.push(photo.photo_url);
+          }
+        });
+      }
+    });
+    return photos;
   };
 
   if (loading) {
@@ -145,6 +164,9 @@ const handleStartTrail = () => {
     ? trail.trail_reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / trail.trail_reviews.length
     : 0;
 
+  // Get user-uploaded review photos for carousel
+  const reviewPhotos = getReviewPhotos();
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -161,7 +183,8 @@ const handleStartTrail = () => {
           style={trailDetailStyles.scrollView}
           showsVerticalScrollIndicator={false}
         >
-          <PhotoCarousel photos={trail} />
+          {/* PhotoCarousel now receives reviewPhotos as optional prop */}
+          <PhotoCarousel photos={trail} reviewPhotos={reviewPhotos} />
 
           <View style={trailDetailStyles.header}>
             <View style={trailDetailStyles.headerTop}>
@@ -209,13 +232,16 @@ const handleStartTrail = () => {
 
           <TrailMapPreview trail={trail} />
           <TrailWeather trail={trail} />
+          <TrailConditions trail={trail} />
           
+          {/* Reviews Section - Always at bottom */}
           <ReviewsList 
             reviews={trail.trail_reviews || []} 
             trailId={trail.id}
             onReviewChanged={fetchTrailDetails}
           />
 
+          {/* Spacer for floating buttons */}
           <View style={{ height: 120 }} />
         </ScrollView>
 

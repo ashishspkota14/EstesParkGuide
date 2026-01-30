@@ -9,7 +9,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
 import { loginStyles } from '../../src/styles/screens/login.styles';
@@ -17,9 +17,15 @@ import { COLORS } from '../../src/constants/colors';
 
 export default function LoginScreen() {
   const { signIn, loading } = useAuth();
+  const { returnTo, trailId } = useLocalSearchParams<{ returnTo?: string; trailId?: string }>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const navigateAfterAuth = () => {
+    // Always go to hiking tab for now - simplest approach
+    router.replace('/tabs/hiking');
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -30,7 +36,7 @@ export default function LoginScreen() {
     const result = await signIn(email, password);
     
     if (result.success) {
-      router.replace('/tabs/hiking');
+      navigateAfterAuth();
     } else {
       Alert.alert('Login Failed', result.error || 'Invalid credentials');
     }
@@ -121,21 +127,24 @@ export default function LoginScreen() {
           )}
         </TouchableOpacity>
 
-        {/* Sign Up Link */}
+        {/* Sign Up Link - Pass returnTo and trailId to sign-up */}
         <View style={loginStyles.signUpContainer}>
           <Text style={loginStyles.signUpText}>Don't have an account? </Text>
           <TouchableOpacity
-            onPress={() => router.push('/(auth)/sign-up')}
+            onPress={() => router.push({
+              pathname: '/(auth)/sign-up',
+              params: { returnTo, trailId }
+            })}
             activeOpacity={0.7}
           >
             <Text style={loginStyles.signUpLink}>Sign Up</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Skip Login */}
+        {/* Skip Login - Go back or to hiking */}
         <TouchableOpacity
           style={loginStyles.skipButton}
-          onPress={() => router.replace('/tabs/hiking')}
+          onPress={navigateAfterAuth}
           activeOpacity={0.7}
         >
           <Text style={loginStyles.skipButtonText}>Continue as Guest</Text>

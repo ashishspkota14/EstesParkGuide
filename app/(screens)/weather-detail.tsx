@@ -1,10 +1,10 @@
-import React from 'react'
+import { View } from 'react-native'
 
 const WeatherDetail = () => {
   return (
-    <div>
+    <View>
       
-    </div>
+    </View>
   )
 }
 
