@@ -12,7 +12,7 @@ export default function WelcomeScreen() {
         <View style={styles.logoContainer}>
           <Ionicons name="leaf" size={80} color={COLORS.white} />
           <Text style={styles.title}>Estes Park Guide</Text>
-          <Text style={styles.subtitle}>Discover the best trails in Estes Park</Text>
+          <Text style={styles.subtitle}>Discover the best spots in Estes Park</Text>
         </View>
 
         {/* Buttons */}
