@@ -35,6 +35,8 @@ export default function LoginScreen() {
       }, 50);
     } else if (returnTo === 'favorites') {
       router.replace('/tabs/favorites');
+    } else if (returnTo === 'profile') {
+      router.replace('/tabs/profile');
     } else {
       router.replace('/tabs/hiking');
     }
