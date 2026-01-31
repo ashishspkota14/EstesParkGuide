@@ -10,18 +10,18 @@ import {
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
+import { useColors } from '../../src/context/ThemeContext';
 import { supabase } from '../../src/services/supabase/client';
-import { COLORS } from '../../src/constants/colors';
 import { favoritesStyles } from '../../src/styles/screens/favorites.styles';
 import TrailCard from '../../src/components/trail/TrailCard';
 
 export default function FavoritesScreen() {
   const { user } = useAuth();
+  const COLORS = useColors();
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Auto-fetch when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       fetchFavorites();
@@ -77,15 +77,17 @@ export default function FavoritesScreen() {
     if (!user) {
       return (
         <View style={favoritesStyles.emptyContainer}>
-          <View style={favoritesStyles.iconCircle}>
+          <View style={[favoritesStyles.iconCircle, { backgroundColor: `${COLORS.primary}15` }]}>
             <Ionicons name="heart-outline" size={48} color={COLORS.border} />
           </View>
-          <Text style={favoritesStyles.emptyTitle}>Save Your Favorite Trails</Text>
-          <Text style={favoritesStyles.emptyText}>
+          <Text style={[favoritesStyles.emptyTitle, { color: COLORS.text }]}>
+            Save Your Favorite Trails
+          </Text>
+          <Text style={[favoritesStyles.emptyText, { color: COLORS.textLight }]}>
             Sign in to save trails and access them anytime, even offline.
           </Text>
           <TouchableOpacity
-            style={favoritesStyles.signInButton}
+            style={[favoritesStyles.signInButton, { backgroundColor: COLORS.primary }]}
             onPress={() => router.push({
               pathname: '/(auth)/login',
               params: { returnTo: 'favorites' }
@@ -100,15 +102,17 @@ export default function FavoritesScreen() {
 
     return (
       <View style={favoritesStyles.emptyContainer}>
-        <View style={favoritesStyles.iconCircle}>
+        <View style={[favoritesStyles.iconCircle, { backgroundColor: `${COLORS.primary}15` }]}>
           <Ionicons name="bookmark-outline" size={48} color={COLORS.border} />
         </View>
-        <Text style={favoritesStyles.emptyTitle}>No Favorites Yet</Text>
-        <Text style={favoritesStyles.emptyText}>
+        <Text style={[favoritesStyles.emptyTitle, { color: COLORS.text }]}>
+          No Favorites Yet
+        </Text>
+        <Text style={[favoritesStyles.emptyText, { color: COLORS.textLight }]}>
           Tap the bookmark icon on any trail to save it here for quick access.
         </Text>
         <TouchableOpacity
-          style={favoritesStyles.exploreButton}
+          style={[favoritesStyles.exploreButton, { backgroundColor: COLORS.primary }]}
           onPress={() => router.push('/tabs/hiking')}
           activeOpacity={0.8}
         >
@@ -121,18 +125,18 @@ export default function FavoritesScreen() {
 
   if (loading) {
     return (
-      <View style={favoritesStyles.loader}>
+      <View style={[favoritesStyles.loader, { backgroundColor: COLORS.background }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
 
   return (
-    <View style={favoritesStyles.container}>
-      <View style={favoritesStyles.header}>
-        <Text style={favoritesStyles.title}>Favorites</Text>
+    <View style={[favoritesStyles.container, { backgroundColor: COLORS.background }]}>
+      <View style={[favoritesStyles.header, { backgroundColor: COLORS.background }]}>
+        <Text style={[favoritesStyles.title, { color: COLORS.text }]}>Favorites</Text>
         {favorites.length > 0 && (
-          <Text style={favoritesStyles.count}>
+          <Text style={[favoritesStyles.count, { color: COLORS.textLight }]}>
             {favorites.length} {favorites.length === 1 ? 'Trail' : 'Trails'}
           </Text>
         )}

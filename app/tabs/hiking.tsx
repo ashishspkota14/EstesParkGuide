@@ -8,21 +8,20 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaProvider } from 'react-native-safe-area-context'; // NEW: Import
 import TrailCard from '../../src/components/trail/TrailCard';
 import { HikingStyles } from '../../src/styles/screens/hiking.styles';
-import { COLORS } from '../../src/constants/colors';
+import { useColors } from '../../src/context/ThemeContext';
 import { TrailSummary } from '../../src/types/trail.types';
 
 export default function HikingScreen() {
+  const COLORS = useColors();
   const [trails, setTrails] = useState<TrailSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0); // NEW: Force re-render when favorites change
+  const [refreshKey, setRefreshKey] = useState(0);
   const router = useRouter();
 
-  // Get API URL from environment variable
   const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
   useEffect(() => {
@@ -36,7 +35,6 @@ export default function HikingScreen() {
       const data = await response.json();
       
       if (data.success) {
-        // Filter out test trails
         const realTrails = data.data.filter(
           (trail: TrailSummary) => trail.slug !== 'test-trail' && trail.slug !== 'test-trail-2'
         );
@@ -58,7 +56,6 @@ export default function HikingScreen() {
     fetchTrails();
   };
 
-  // NEW: Handle favorite changes
   const handleFavoriteChange = () => {
     setRefreshKey(prev => prev + 1);
   };
@@ -69,18 +66,21 @@ export default function HikingScreen() {
 
   if (loading) {
     return (
-      <View style={HikingStyles.centerContainer}>
+      <View style={[HikingStyles.centerContainer, { backgroundColor: COLORS.background }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={HikingStyles.loadingText}>Loading trails...</Text>
+        <Text style={[HikingStyles.loadingText, { color: COLORS.textLight }]}>Loading trails...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={HikingStyles.centerContainer}>
-        <Text style={HikingStyles.errorText}>⚠️ {error}</Text>
-        <TouchableOpacity style={HikingStyles.retryButton} onPress={fetchTrails}>
+      <View style={[HikingStyles.centerContainer, { backgroundColor: COLORS.background }]}>
+        <Text style={[HikingStyles.errorText, { color: COLORS.danger || '#EF4444' }]}>⚠️ {error}</Text>
+        <TouchableOpacity 
+          style={[HikingStyles.retryButton, { backgroundColor: COLORS.primary }]} 
+          onPress={fetchTrails}
+        >
           <Text style={HikingStyles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -88,23 +88,25 @@ export default function HikingScreen() {
   }
 
   return (
-    <View style={HikingStyles.container}>
+    <View style={[HikingStyles.container, { backgroundColor: COLORS.background }]}>
       {/* Header */}
-      <View style={HikingStyles.header}>
-        <Text style={HikingStyles.headerTitle}>🥾 Trails</Text>
-        <Text style={HikingStyles.headerSubtitle}>{trails.length} trails available</Text>
+      <View style={[HikingStyles.header, { backgroundColor: COLORS.background }]}>
+        <Text style={[HikingStyles.headerTitle, { color: COLORS.text }]}>🥾 Trails</Text>
+        <Text style={[HikingStyles.headerSubtitle, { color: COLORS.textLight }]}>
+          {trails.length} trails available
+        </Text>
       </View>
 
       {/* Trail List */}
       <FlatList
-        key={refreshKey} // NEW: Forces re-render when favorites change
+        key={refreshKey}
         data={trails}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TrailCard 
             trail={item} 
             onPress={() => handleTrailPress(item)}
-            onFavoriteChange={handleFavoriteChange} // NEW: Notify when favorite changes
+            onFavoriteChange={handleFavoriteChange}
           />
         )}
         contentContainerStyle={HikingStyles.listContent}
@@ -118,7 +120,7 @@ export default function HikingScreen() {
         }
         ListEmptyComponent={
           <View style={HikingStyles.emptyContainer}>
-            <Text style={HikingStyles.emptyText}>No trails found</Text>
+            <Text style={[HikingStyles.emptyText, { color: COLORS.textLight }]}>No trails found</Text>
           </View>
         }
       />

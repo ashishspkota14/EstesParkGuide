@@ -4,7 +4,8 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase/client';
 import { useAuth } from '../../context/AuthContext';
-import { COLORS } from '../../constants/colors';
+import { useColors } from '../../context/ThemeContext';
+import { useUnits } from '../../context/UnitsContext';
 import { trailCardStyles } from '../../styles/components/trailCard.styles';
 import DifficultyBadge from './DifficultyBadge';
 
@@ -16,6 +17,8 @@ interface TrailCardProps {
 
 export default function TrailCard({ trail, onPress, onFavoriteChange }: TrailCardProps) {
   const { user } = useAuth();
+  const COLORS = useColors();
+  const { formatDistanceShort, formatElevationShort } = useUnits();
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -74,19 +77,20 @@ export default function TrailCard({ trail, onPress, onFavoriteChange }: TrailCar
     }
   };
 
-const handlePress = () => {
-  console.log('📍 Navigating to ID:', trail.id);
-  
-  router.push({
-    pathname: "/trail-detail",
-    params: { id: trail.id }
-  });
-};
+  const handlePress = () => {
+    console.log('📍 Navigating to ID:', trail.id);
+    
+    router.push({
+      pathname: "/trail-detail",
+      params: { id: trail.id }
+    });
+  };
+
   const photo = trail.image_main || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4';
 
   return (
     <TouchableOpacity 
-      style={trailCardStyles.card}
+      style={[trailCardStyles.card, { backgroundColor: COLORS.card }]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
@@ -109,12 +113,12 @@ const handlePress = () => {
 
       <View style={trailCardStyles.content}>
         <View style={trailCardStyles.header}>
-          <Text style={trailCardStyles.name} numberOfLines={1}>
+          <Text style={[trailCardStyles.name, { color: COLORS.text }]} numberOfLines={1}>
             {trail.name}
           </Text>
           <View style={trailCardStyles.ratingBox}>
             <Ionicons name="star" size={14} color="#FFB800" />
-            <Text style={trailCardStyles.rating}>
+            <Text style={[trailCardStyles.rating, { color: COLORS.text }]}>
               {trail.rating || '4.5'}
             </Text>
           </View>
@@ -123,14 +127,14 @@ const handlePress = () => {
         <View style={trailCardStyles.details}>
           <View style={trailCardStyles.detailItem}>
             <Ionicons name="trail-sign" size={14} color={COLORS.textLight} />
-            <Text style={trailCardStyles.detailText}>
-              {trail.distance_miles?.toFixed(1)} mi
+            <Text style={[trailCardStyles.detailText, { color: COLORS.textLight }]}>
+              {formatDistanceShort(trail.distance_miles || 0)}
             </Text>
           </View>
           <View style={trailCardStyles.detailItem}>
             <Ionicons name="trending-up" size={14} color={COLORS.textLight} />
-            <Text style={trailCardStyles.detailText}>
-              {trail.elevation_gain_ft?.toLocaleString()} ft
+            <Text style={[trailCardStyles.detailText, { color: COLORS.textLight }]}>
+              {formatElevationShort(trail.elevation_gain_ft || 0)}
             </Text>
           </View>
         </View>
@@ -138,7 +142,7 @@ const handlePress = () => {
         <View style={trailCardStyles.footer}>
           <DifficultyBadge difficulty={trail.difficulty} />
           {trail.dog_friendly && (
-            <View style={trailCardStyles.tag}>
+            <View style={[trailCardStyles.tag, { backgroundColor: `${COLORS.primary}15` }]}>
               <Ionicons name="paw" size={12} color={COLORS.primary} />
             </View>
           )}

@@ -15,7 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
 import { useAuth } from '../../src/context/AuthContext';
-import { COLORS } from '../../src/constants/colors';
+import { useColors } from '../../src/context/ThemeContext';
+import { useUnits } from '../../src/context/UnitsContext';
 import { supabase } from '../../src/services/supabase/client';
 import TrailCard from '../../src/components/trail/TrailCard';
 import Settings from '../../src/components/profile/Settings';
@@ -53,7 +54,6 @@ interface UserPhoto {
   created_at: string;
 }
 
-// Hiker levels based on stats
 const HIKER_LEVELS = [
   { name: 'Beginner', minHikes: 0, icon: '🥾', color: '#94A3B8' },
   { name: 'Explorer', minHikes: 5, icon: '🏕️', color: '#22C55E' },
@@ -64,6 +64,8 @@ const HIKER_LEVELS = [
 
 export default function ProfileScreen() {
   const { user } = useAuth();
+  const COLORS = useColors();
+  const { formatDistanceShort, formatElevationShort, getDistanceUnitShort, getElevationUnitShort } = useUnits();
   
   const [activeTab, setActiveTab] = useState<'completed' | 'reviews' | 'photos'>('completed');
   const [showSettings, setShowSettings] = useState(false);
@@ -74,7 +76,6 @@ export default function ProfileScreen() {
   const [stats, setStats] = useState({ hikes: 0, miles: 0, vert: 0 });
   const [profile, setProfile] = useState<any>(null);
 
-  // Calculate hiker level based on completed hikes
   const getHikerLevel = () => {
     const level = [...HIKER_LEVELS].reverse().find(l => stats.hikes >= l.minHikes);
     return level || HIKER_LEVELS[0];
@@ -89,7 +90,6 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
 
-      // Fetch profile data
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
@@ -98,7 +98,6 @@ export default function ProfileScreen() {
       
       setProfile(profileData);
 
-      // Fetch completed hikes with stats
       const { data: statsData } = await supabase
         .from('completed_trails')
         .select('trails(distance_miles, elevation_gain_ft)')
@@ -114,7 +113,6 @@ export default function ProfileScreen() {
         });
       }
 
-      // Fetch completed hikes list
       const { data: hikesData } = await supabase
         .from('completed_trails')
         .select('completed_at, trails (*)')
@@ -128,7 +126,6 @@ export default function ProfileScreen() {
         setCompletedHikes(formatted);
       }
 
-      // Fetch user reviews
       const { data: reviewsData } = await supabase
         .from('trail_reviews')
         .select(`
@@ -145,7 +142,6 @@ export default function ProfileScreen() {
         })));
       }
 
-      // Fetch user photos
       const { data: photosData } = await supabase
         .from('user_photos')
         .select('*')
@@ -174,21 +170,20 @@ export default function ProfileScreen() {
     });
   };
 
-  // Guest view - Sign in prompt
   if (!user) {
     return (
-      <SafeAreaView style={profileStyles.container} edges={['top']}>
+      <SafeAreaView style={[profileStyles.container, { backgroundColor: COLORS.background }]} edges={['top']}>
         <View style={profileStyles.guestContainer}>
-          <View style={profileStyles.guestIconCircle}>
+          <View style={[profileStyles.guestIconCircle, { backgroundColor: `${COLORS.primary}15` }]}>
             <Ionicons name="person-outline" size={60} color={COLORS.primary} />
           </View>
-          <Text style={profileStyles.guestTitle}>Your Hiking Profile</Text>
-          <Text style={profileStyles.guestText}>
+          <Text style={[profileStyles.guestTitle, { color: COLORS.text }]}>Your Hiking Profile</Text>
+          <Text style={[profileStyles.guestText, { color: COLORS.textLight }]}>
             Sign in to track your adventures, earn badges, upload photos, and compete for weekly Starbucks rewards!
           </Text>
           
           <TouchableOpacity 
-            style={profileStyles.signInButton}
+            style={[profileStyles.signInButton, { backgroundColor: COLORS.primary }]}
             onPress={handleSignIn}
             activeOpacity={0.8}
           >
@@ -196,29 +191,28 @@ export default function ProfileScreen() {
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={profileStyles.createAccountButton}
+            style={[profileStyles.createAccountButton, { borderColor: COLORS.primary }]}
             onPress={() => router.push({
               pathname: '/(auth)/sign-up',
               params: { returnTo: 'profile' }
             })}
             activeOpacity={0.8}
           >
-            <Text style={profileStyles.createAccountText}>Create Account</Text>
+            <Text style={[profileStyles.createAccountText, { color: COLORS.primary }]}>Create Account</Text>
           </TouchableOpacity>
 
-          {/* Feature highlights */}
           <View style={profileStyles.featureList}>
             <View style={profileStyles.featureItem}>
               <Ionicons name="trophy" size={24} color={COLORS.primary} />
-              <Text style={profileStyles.featureText}>Earn achievement badges</Text>
+              <Text style={[profileStyles.featureText, { color: COLORS.text }]}>Earn achievement badges</Text>
             </View>
             <View style={profileStyles.featureItem}>
               <Ionicons name="camera" size={24} color={COLORS.primary} />
-              <Text style={profileStyles.featureText}>Upload photos for Starbucks rewards</Text>
+              <Text style={[profileStyles.featureText, { color: COLORS.text }]}>Upload photos for Starbucks rewards</Text>
             </View>
             <View style={profileStyles.featureItem}>
               <Ionicons name="stats-chart" size={24} color={COLORS.primary} />
-              <Text style={profileStyles.featureText}>Track your hiking stats</Text>
+              <Text style={[profileStyles.featureText, { color: COLORS.text }]}>Track your hiking stats</Text>
             </View>
           </View>
         </View>
@@ -230,54 +224,47 @@ export default function ProfileScreen() {
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Hiker';
 
   const renderHeader = () => (
-    <View style={profileStyles.headerContainer}>
-      {/* Top Row */}
+    <View style={[profileStyles.headerContainer, { backgroundColor: COLORS.background }]}>
       <View style={profileStyles.topRow}>
-        <Text style={profileStyles.headerTitle}>Profile</Text>
+        <Text style={[profileStyles.headerTitle, { color: COLORS.text }]}>Profile</Text>
         <TouchableOpacity onPress={() => setShowSettings(true)}>
           <Ionicons name="settings-outline" size={24} color={COLORS.text} />
         </TouchableOpacity>
       </View>
 
-      {/* Profile Info */}
       <View style={profileStyles.profileInfo}>
-        {/* Avatar with edit button */}
         <ProfilePhotoUpload 
           currentPhoto={profile?.avatar_url}
           onPhotoUpdated={fetchData}
         />
         
-        <Text style={profileStyles.name}>{displayName}</Text>
+        <Text style={[profileStyles.name, { color: COLORS.text }]}>{displayName}</Text>
         
-        {/* Hiker Level Badge */}
         <View style={[profileStyles.levelBadge, { backgroundColor: hikerLevel.color }]}>
           <Text style={profileStyles.levelIcon}>{hikerLevel.icon}</Text>
           <Text style={profileStyles.levelText}>{hikerLevel.name}</Text>
         </View>
 
-        {/* Stats Row */}
-        <View style={profileStyles.statsRow}>
+        <View style={[profileStyles.statsRow, { backgroundColor: COLORS.white }]}>
           <View style={profileStyles.statBox}>
-            <Text style={profileStyles.statVal}>{stats.hikes}</Text>
-            <Text style={profileStyles.statLab}>Hikes</Text>
+            <Text style={[profileStyles.statVal, { color: COLORS.text }]}>{stats.hikes}</Text>
+            <Text style={[profileStyles.statLab, { color: COLORS.textLight }]}>Hikes</Text>
           </View>
-          <View style={[profileStyles.statBox, profileStyles.statDivider]}>
-            <Text style={profileStyles.statVal}>{stats.miles}</Text>
-            <Text style={profileStyles.statLab}>Miles</Text>
+          <View style={[profileStyles.statBox, profileStyles.statDivider, { borderColor: COLORS.border }]}>
+            <Text style={[profileStyles.statVal, { color: COLORS.text }]}>{stats.miles}</Text>
+            <Text style={[profileStyles.statLab, { color: COLORS.textLight }]}>{getDistanceUnitShort() === 'km' ? 'Km' : 'Miles'}</Text>
           </View>
           <View style={profileStyles.statBox}>
-            <Text style={profileStyles.statVal}>{stats.vert.toLocaleString()}</Text>
-            <Text style={profileStyles.statLab}>Vert ft</Text>
+            <Text style={[profileStyles.statVal, { color: COLORS.text }]}>{stats.vert.toLocaleString()}</Text>
+            <Text style={[profileStyles.statLab, { color: COLORS.textLight }]}>Vert {getElevationUnitShort()}</Text>
           </View>
         </View>
       </View>
 
-      {/* Achievement Badges Preview */}
       <AchievementBadges stats={stats} />
 
-      {/* Starbucks Reward Card */}
       <TouchableOpacity 
-        style={profileStyles.rewardCard}
+        style={[profileStyles.rewardCard, { backgroundColor: COLORS.primary }]}
         onPress={() => setActiveTab('photos')}
         activeOpacity={0.9}
       >
@@ -293,46 +280,45 @@ export default function ProfileScreen() {
         <Ionicons name="chevron-forward" size={20} color={COLORS.white} />
       </TouchableOpacity>
 
-      {/* Tab Wrapper */}
-      <View style={profileStyles.tabWrapper}>
+      <View style={[profileStyles.tabWrapper, { backgroundColor: COLORS.white }]}>
         <TouchableOpacity 
           onPress={() => setActiveTab('completed')}
-          style={[profileStyles.tab, activeTab === 'completed' && profileStyles.activeTab]}
+          style={[profileStyles.tab, activeTab === 'completed' && [profileStyles.activeTab, { borderBottomColor: COLORS.primary }]]}
         >
           <Ionicons 
             name="checkmark-circle" 
             size={18} 
             color={activeTab === 'completed' ? COLORS.primary : COLORS.textLight} 
           />
-          <Text style={[profileStyles.tabText, activeTab === 'completed' && profileStyles.activeTabText]}>
+          <Text style={[profileStyles.tabText, { color: COLORS.textLight }, activeTab === 'completed' && { color: COLORS.primary }]}>
             Completed
           </Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           onPress={() => setActiveTab('reviews')}
-          style={[profileStyles.tab, activeTab === 'reviews' && profileStyles.activeTab]}
+          style={[profileStyles.tab, activeTab === 'reviews' && [profileStyles.activeTab, { borderBottomColor: COLORS.primary }]]}
         >
           <Ionicons 
             name="star" 
             size={18} 
             color={activeTab === 'reviews' ? COLORS.primary : COLORS.textLight} 
           />
-          <Text style={[profileStyles.tabText, activeTab === 'reviews' && profileStyles.activeTabText]}>
+          <Text style={[profileStyles.tabText, { color: COLORS.textLight }, activeTab === 'reviews' && { color: COLORS.primary }]}>
             Reviews
           </Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           onPress={() => setActiveTab('photos')}
-          style={[profileStyles.tab, activeTab === 'photos' && profileStyles.activeTab]}
+          style={[profileStyles.tab, activeTab === 'photos' && [profileStyles.activeTab, { borderBottomColor: COLORS.primary }]]}
         >
           <Ionicons 
             name="images" 
             size={18} 
             color={activeTab === 'photos' ? COLORS.primary : COLORS.textLight} 
           />
-          <Text style={[profileStyles.tabText, activeTab === 'photos' && profileStyles.activeTabText]}>
+          <Text style={[profileStyles.tabText, { color: COLORS.textLight }, activeTab === 'photos' && { color: COLORS.primary }]}>
             Photos
           </Text>
         </TouchableOpacity>
@@ -342,15 +328,15 @@ export default function ProfileScreen() {
 
   const renderCompletedEmpty = () => (
     <View style={profileStyles.emptyContainer}>
-      <View style={profileStyles.emptyIconCircle}>
+      <View style={[profileStyles.emptyIconCircle, { backgroundColor: `${COLORS.primary}15` }]}>
         <Ionicons name="trail-sign-outline" size={40} color={COLORS.primary} />
       </View>
-      <Text style={profileStyles.emptyTitle}>No Hikes Yet</Text>
-      <Text style={profileStyles.emptyText}>
+      <Text style={[profileStyles.emptyTitle, { color: COLORS.text }]}>No Hikes Yet</Text>
+      <Text style={[profileStyles.emptyText, { color: COLORS.textLight }]}>
         Your adventure starts here! Find a trail and tap "Start Hike" to begin tracking.
       </Text>
       <TouchableOpacity 
-        style={profileStyles.exploreButton}
+        style={[profileStyles.exploreButton, { backgroundColor: COLORS.primary }]}
         onPress={() => router.push('/tabs/hiking')}
         activeOpacity={0.8}
       >
@@ -362,15 +348,15 @@ export default function ProfileScreen() {
 
   const renderReviewsEmpty = () => (
     <View style={profileStyles.emptyContainer}>
-      <View style={profileStyles.emptyIconCircle}>
+      <View style={[profileStyles.emptyIconCircle, { backgroundColor: `${COLORS.primary}15` }]}>
         <Ionicons name="chatbubbles-outline" size={40} color={COLORS.primary} />
       </View>
-      <Text style={profileStyles.emptyTitle}>Share Your Wisdom</Text>
-      <Text style={profileStyles.emptyText}>
+      <Text style={[profileStyles.emptyTitle, { color: COLORS.text }]}>Share Your Wisdom</Text>
+      <Text style={[profileStyles.emptyText, { color: COLORS.textLight }]}>
         Your reviews help fellow hikers find the best trails and stay safe.
       </Text>
       <TouchableOpacity 
-        style={profileStyles.exploreButton}
+        style={[profileStyles.exploreButton, { backgroundColor: COLORS.primary }]}
         onPress={() => router.push('/tabs/hiking')}
         activeOpacity={0.8}
       >
@@ -382,26 +368,24 @@ export default function ProfileScreen() {
 
   const renderPhotosSection = () => (
     <View style={profileStyles.photosSection}>
-      {/* Upload Card */}
       <TouchableOpacity 
-        style={profileStyles.uploadCard}
+        style={[profileStyles.uploadCard, { backgroundColor: COLORS.white }]}
         onPress={() => Alert.alert('Coming Soon', 'Photo upload feature will be available soon!')}
         activeOpacity={0.8}
       >
-        <View style={profileStyles.uploadIconCircle}>
+        <View style={[profileStyles.uploadIconCircle, { backgroundColor: `${COLORS.primary}15` }]}>
           <Ionicons name="cloud-upload-outline" size={32} color={COLORS.primary} />
         </View>
-        <Text style={profileStyles.uploadTitle}>Upload Trail Photos</Text>
-        <Text style={profileStyles.uploadText}>
+        <Text style={[profileStyles.uploadTitle, { color: COLORS.text }]}>Upload Trail Photos</Text>
+        <Text style={[profileStyles.uploadText, { color: COLORS.textLight }]}>
           Share your hiking memories and enter our weekly Starbucks giveaway! ☕
         </Text>
-        <View style={profileStyles.uploadButton}>
+        <View style={[profileStyles.uploadButton, { backgroundColor: COLORS.primary }]}>
           <Ionicons name="add" size={20} color="#fff" />
           <Text style={profileStyles.uploadButtonText}>Add Photos</Text>
         </View>
       </TouchableOpacity>
 
-      {/* User Photos Grid */}
       {userPhotos.length > 0 ? (
         <View style={profileStyles.photosGrid}>
           {userPhotos.map((photo) => (
@@ -419,7 +403,7 @@ export default function ProfileScreen() {
         </View>
       ) : (
         <View style={profileStyles.noPhotosContainer}>
-          <Text style={profileStyles.noPhotosText}>
+          <Text style={[profileStyles.noPhotosText, { color: COLORS.textLight }]}>
             No photos uploaded yet. Be the first to share your trail adventures!
           </Text>
         </View>
@@ -429,7 +413,7 @@ export default function ProfileScreen() {
 
   const renderReviewItem = ({ item }: { item: UserReview }) => (
     <TouchableOpacity 
-      style={profileStyles.reviewCard}
+      style={[profileStyles.reviewCard, { backgroundColor: COLORS.white }]}
       onPress={() => router.push({
         pathname: '/(screens)/trail-detail',
         params: { id: item.trail?.id }
@@ -440,7 +424,7 @@ export default function ProfileScreen() {
         <Image source={{ uri: item.trail.image_main }} style={profileStyles.reviewImage} />
       )}
       <View style={profileStyles.reviewContent}>
-        <Text style={profileStyles.reviewTrailName} numberOfLines={1}>
+        <Text style={[profileStyles.reviewTrailName, { color: COLORS.text }]} numberOfLines={1}>
           {item.trail?.name || 'Trail'}
         </Text>
         <View style={profileStyles.reviewStars}>
@@ -453,7 +437,7 @@ export default function ProfileScreen() {
             />
           ))}
         </View>
-        <Text style={profileStyles.reviewComment} numberOfLines={2}>
+        <Text style={[profileStyles.reviewComment, { color: COLORS.textLight }]} numberOfLines={2}>
           {item.comment}
         </Text>
       </View>
@@ -463,7 +447,7 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={profileStyles.container} edges={['top']}>
+      <SafeAreaView style={[profileStyles.container, { backgroundColor: COLORS.background }]} edges={['top']}>
         <View style={profileStyles.loaderContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
@@ -472,7 +456,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={profileStyles.container} edges={['top']}>
+    <SafeAreaView style={[profileStyles.container, { backgroundColor: COLORS.background }]} edges={['top']}>
       {activeTab === 'photos' ? (
         <ScrollView showsVerticalScrollIndicator={false}>
           {renderHeader()}

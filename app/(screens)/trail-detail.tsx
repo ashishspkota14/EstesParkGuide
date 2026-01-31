@@ -3,10 +3,10 @@ import { View, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity } fr
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-// Your Project's Correct Imports
 import { supabase } from '../../src/services/supabase/client';
 import { useAuth } from '../../src/context/AuthContext';
-import { COLORS } from '../../src/constants/colors';
+import { useColors } from '../../src/context/ThemeContext';
+import { useUnits } from '../../src/context/UnitsContext';
 import { trailDetailStyles } from '../../src/styles/screens/trail-detail.styles';
 import PhotoCarousel from '../../src/components/trail/PhotoCarousel';
 import TrailStats from '../../src/components/trail/TrailStats';
@@ -21,6 +21,9 @@ import { confirmAndNavigate } from '../../src/utils/navigation';
 export default function TrailDetailScreen() {
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
+  const COLORS = useColors();
+  const { formatDistanceShort, formatElevationShort } = useUnits();
+  
   const [trail, setTrail] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -121,7 +124,6 @@ export default function TrailDetailScreen() {
     return trail?.park_area || 'Rocky Mountain National Park';
   };
 
-  // Collect all review photos to use in carousel
   const getReviewPhotos = (): string[] => {
     if (!trail?.trail_reviews) return [];
     
@@ -142,7 +144,7 @@ export default function TrailDetailScreen() {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
-        <View style={trailDetailStyles.loader}>
+        <View style={[trailDetailStyles.loader, { backgroundColor: COLORS.background }]}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
       </>
@@ -153,8 +155,8 @@ export default function TrailDetailScreen() {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
-        <View style={trailDetailStyles.loader}>
-          <Text style={trailDetailStyles.errorText}>Trail not found</Text>
+        <View style={[trailDetailStyles.loader, { backgroundColor: COLORS.background }]}>
+          <Text style={[trailDetailStyles.errorText, { color: COLORS.text }]}>Trail not found</Text>
         </View>
       </>
     );
@@ -164,13 +166,12 @@ export default function TrailDetailScreen() {
     ? trail.trail_reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / trail.trail_reviews.length
     : 0;
 
-  // Get user-uploaded review photos for carousel
   const reviewPhotos = getReviewPhotos();
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={trailDetailStyles.container}>
+      <View style={[trailDetailStyles.container, { backgroundColor: COLORS.background }]}>
         <TouchableOpacity 
           style={trailDetailStyles.backButton}
           onPress={() => router.back()}
@@ -183,16 +184,15 @@ export default function TrailDetailScreen() {
           style={trailDetailStyles.scrollView}
           showsVerticalScrollIndicator={false}
         >
-          {/* PhotoCarousel now receives reviewPhotos as optional prop */}
           <PhotoCarousel photos={trail} reviewPhotos={reviewPhotos} />
 
-          <View style={trailDetailStyles.header}>
+          <View style={[trailDetailStyles.header, { backgroundColor: COLORS.white }]}>
             <View style={trailDetailStyles.headerTop}>
               <View style={trailDetailStyles.headerLeft}>
-                <Text style={trailDetailStyles.title}>{trail.name}</Text>
+                <Text style={[trailDetailStyles.title, { color: COLORS.text }]}>{trail.name}</Text>
                 <View style={trailDetailStyles.locationRow}>
                   <Ionicons name="location" size={16} color={COLORS.textLight} />
-                  <Text style={trailDetailStyles.location}>{getParkName()}</Text>
+                  <Text style={[trailDetailStyles.location, { color: COLORS.textLight }]}>{getParkName()}</Text>
                 </View>
               </View>
               <TouchableOpacity onPress={toggleFavorite}>
@@ -205,17 +205,17 @@ export default function TrailDetailScreen() {
             </View>
 
             <View style={trailDetailStyles.tagsRow}>
-              <View style={trailDetailStyles.ratingBox}>
+              <View style={[trailDetailStyles.ratingBox, { backgroundColor: `${COLORS.primary}10` }]}>
                 <Ionicons name="star" size={18} color="#FFB800" />
-                <Text style={trailDetailStyles.ratingText}>
+                <Text style={[trailDetailStyles.ratingText, { color: COLORS.text }]}>
                   {avgRating.toFixed(1)} ({trail.trail_reviews?.length || 0})
                 </Text>
               </View>
               <DifficultyBadge difficulty={trail.difficulty} />
               {trail.dog_friendly && (
-                <View style={trailDetailStyles.tag}>
+                <View style={[trailDetailStyles.tag, { backgroundColor: `${COLORS.primary}10` }]}>
                   <Ionicons name="paw" size={14} color={COLORS.primary} />
-                  <Text style={trailDetailStyles.tagText}>Dog Friendly</Text>
+                  <Text style={[trailDetailStyles.tagText, { color: COLORS.primary }]}>Dog Friendly</Text>
                 </View>
               )}
             </View>
@@ -223,9 +223,9 @@ export default function TrailDetailScreen() {
 
           <TrailStats trail={trail} />
 
-          <View style={trailDetailStyles.section}>
-            <Text style={trailDetailStyles.sectionTitle}>About This Trail</Text>
-            <Text style={trailDetailStyles.description}>
+          <View style={[trailDetailStyles.section, { backgroundColor: COLORS.white }]}>
+            <Text style={[trailDetailStyles.sectionTitle, { color: COLORS.text }]}>About This Trail</Text>
+            <Text style={[trailDetailStyles.description, { color: COLORS.textLight }]}>
               {trail.description || 'A beautiful trail with stunning mountain views.'}
             </Text>
           </View>
@@ -234,14 +234,12 @@ export default function TrailDetailScreen() {
           <TrailWeather trail={trail} />
           <TrailConditions trail={trail} />
           
-          {/* Reviews Section - Always at bottom */}
           <ReviewsList 
             reviews={trail.trail_reviews || []} 
             trailId={trail.id}
             onReviewChanged={fetchTrailDetails}
           />
 
-          {/* Spacer for floating buttons */}
           <View style={{ height: 120 }} />
         </ScrollView>
 

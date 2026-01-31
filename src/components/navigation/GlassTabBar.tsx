@@ -11,8 +11,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-
-const ACTIVE_GREEN = '#2d5a3f';
+import { useColors } from '../../context/ThemeContext';
 
 const ICONS: Record<
   string,
@@ -30,6 +29,7 @@ const ICONS: Record<
 };
 
 export function GlassTabBar({ state, descriptors, navigation }: any) {
+  const COLORS = useColors();
   const WrapperComponent = Platform.OS === 'ios' ? BlurView : View;
   const blurProps = Platform.OS === 'ios' ? { intensity: 80, tint: 'light' as const } : {};
   
@@ -41,7 +41,6 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
   const [tabPositions, setTabPositions] = useState<number[]>([]);
 
   useEffect(() => {
-    // Animate highlight to current tab when not swiping
     if (!isSwiping) {
       Animated.spring(highlightPosition, {
         toValue: state.index,
@@ -54,7 +53,7 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
 
   const handleTabLayout = (index: number, event: LayoutChangeEvent) => {
     const { x, width } = event.nativeEvent.layout;
-    const centerX = x + (width / 2) - 27; // 27 is half of circle width (54/2)
+    const centerX = x + (width / 2) - 27;
     
     setTabPositions(prev => {
       const newPositions = [...prev];
@@ -72,7 +71,6 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
     const currentX = e.nativeEvent.pageX;
     const deltaX = currentX - touchStartX.current;
     
-    // Find closest tab based on touch position
     if (tabPositions.length === 5) {
       const tabBarLeft = 30;
       const relativeX = currentX - tabBarLeft;
@@ -81,7 +79,7 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
       let minDistance = Infinity;
       
       tabPositions.forEach((pos, idx) => {
-        const distance = Math.abs(relativeX - (pos + 27)); // +27 to center
+        const distance = Math.abs(relativeX - (pos + 27));
         if (distance < minDistance) {
           minDistance = distance;
           closestIndex = idx;
@@ -92,18 +90,15 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
       highlightPosition.setValue(closestIndex);
     }
     
-    // Calculate swipe progress
     const progress = Math.min(Math.abs(deltaX) / 100, 1);
     setSwipeProgress(progress);
   };
 
   const handleTouchEnd = (e: GestureResponderEvent) => {
-    // PRIORITY: If hovering over a tab, go to that tab (even if swiped far)
     if (hoverIndex !== null && hoverIndex !== state.index) {
       navigation.navigate(state.routes[hoverIndex].name);
     }
 
-    // Reset state
     setIsSwiping(false);
     setSwipeProgress(0);
     setHoverIndex(null);
@@ -123,14 +118,15 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <WrapperComponent {...blurProps} style={styles.blur}>
+      <WrapperComponent {...blurProps} style={[styles.blur, Platform.OS === 'android' && { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}>
         <View style={styles.container}>
-          {/* Moving Highlight - FIXED SIZE */}
           {tabPositions.length === 5 && (
             <Animated.View
               style={[
                 styles.movingHighlight,
                 {
+                  backgroundColor: COLORS.primary,
+                  shadowColor: COLORS.primary,
                   transform: [{ translateX: highlightTranslateX }],
                   opacity: isSwiping ? 0.7 : 1,
                 },
@@ -138,7 +134,6 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
             />
           )}
 
-          {/* Tab Items */}
           {state.routes.map((route: any, index: number) => {
             const isFocused = state.index === index;
             const isHovered = hoverIndex === index;
@@ -164,7 +159,6 @@ export function GlassTabBar({ state, descriptors, navigation }: any) {
   );
 }
 
-// Separate component for smooth animations
 function TabItem({ icon, isFocused, isHovered, isSwiping, onPress, onLayout }: any) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -226,7 +220,6 @@ const styles = StyleSheet.create({
   },
   blur: {
     borderRadius: 35,
-    backgroundColor: Platform.OS === 'android' ? 'rgba(255, 255, 255, 0.95)' : 'transparent',
   },
   container: {
     flexDirection: 'row',
@@ -238,11 +231,9 @@ const styles = StyleSheet.create({
   },
   movingHighlight: {
     position: 'absolute',
-    width: 54, // FIXED SIZE
-    height: 54, // FIXED SIZE
-    borderRadius: 27, // FIXED RADIUS
-    backgroundColor: ACTIVE_GREEN,
-    shadowColor: ACTIVE_GREEN,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
