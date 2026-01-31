@@ -8,12 +8,11 @@ export const trailConditionsStyles = StyleSheet.create({
     marginBottom: 8,
   },
   card: {
-    backgroundColor: '#E8F5E9', // Slightly darker mint green
+    // backgroundColor and borderLeftColor applied dynamically in component
     borderRadius: 12,
     padding: 16,
     paddingLeft: 14,
     borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary, // Dark forest green accent
   },
   title: {
     fontSize: 16,

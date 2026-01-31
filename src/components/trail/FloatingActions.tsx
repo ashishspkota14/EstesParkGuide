@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColors } from '../../context/ThemeContext';
 import { floatingActionsStyles } from '../../styles/components/floatingActions.styles';
 
 interface FloatingActionsProps {
@@ -9,19 +10,26 @@ interface FloatingActionsProps {
 }
 
 export default function FloatingActions({ onStart, onDownload }: FloatingActionsProps) {
+  const COLORS = useColors();
+
   return (
     <View style={floatingActionsStyles.container}>
       <TouchableOpacity
-        style={floatingActionsStyles.downloadButton}
+        style={[
+          floatingActionsStyles.downloadButton,
+          { backgroundColor: COLORS.white, borderColor: COLORS.primary }
+        ]}
         onPress={onDownload}
         activeOpacity={0.8}
       >
-        <Ionicons name="download-outline" size={22} color="#2d5a3f" />
-        <Text style={floatingActionsStyles.downloadText}>Download</Text>
+        <Ionicons name="download-outline" size={22} color={COLORS.primary} />
+        <Text style={[floatingActionsStyles.downloadText, { color: COLORS.primary }]}>
+          Download
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={floatingActionsStyles.startButton}
+        style={[floatingActionsStyles.startButton, { backgroundColor: COLORS.primary }]}
         onPress={onStart}
         activeOpacity={0.8}
       >

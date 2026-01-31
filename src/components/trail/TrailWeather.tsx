@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColors } from '../../context/ThemeContext';
 import { trailWeatherStyles } from '../../styles/components/trailWeather.styles';
-import { COLORS } from '../../constants/colors';
 
 interface TrailWeatherProps {
   trail: any;
@@ -20,12 +20,13 @@ interface ForecastDay {
 }
 
 export default function TrailWeather({ trail }: TrailWeatherProps) {
+  const COLORS = useColors();
   const [weather, setWeather] = useState<any>(null);
   const [forecast, setForecast] = useState<ForecastDay[]>([]);
   const [sunTimes, setSunTimes] = useState<{ sunrise: string; sunset: string } | null>(null);
   const [pastPrecipitation, setPastPrecipitation] = useState<{ rain: number; snow: number }>({ rain: 0, snow: 0 });
   const [loading, setLoading] = useState(true);
-  const [selectedDayIndex, setSelectedDayIndex] = useState(0); // 0 = Today
+  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
 
   useEffect(() => {
     fetchWeather();
@@ -49,7 +50,6 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
       const data = await response.json();
       setWeather(data.current);
       
-      // Calculate past 3 days precipitation
       if (data.daily?.precipitation_sum && data.daily?.snowfall_sum) {
         const pastRain = (data.daily.precipitation_sum[0] || 0) + 
                          (data.daily.precipitation_sum[1] || 0) + 
@@ -70,7 +70,6 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
         });
       }
       
-      // Build forecast data
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const today = new Date();
@@ -126,7 +125,6 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
     return '#9B59B6';
   };
 
-  // SMART TRAIL CONDITION LOGIC
   const getTodayCondition = (): { text: string; emoji: string; color: string } => {
     if (!weather) return { text: 'Unknown', emoji: '❓', color: '#666' };
     
@@ -191,10 +189,8 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
     return { text: 'Check Conditions', emoji: '🔍', color: '#9B59B6' };
   };
 
-  // Get display weather based on selected day
   const getDisplayWeather = () => {
     if (selectedDayIndex === 0 && weather) {
-      // Today - use current weather
       return {
         temp: Math.round(weather.temperature_2m),
         feelsLike: Math.round(weather.apparent_temperature || weather.temperature_2m),
@@ -206,7 +202,6 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
         isToday: true,
       };
     } else if (forecast[selectedDayIndex]) {
-      // Future day - use forecast
       const day = forecast[selectedDayIndex];
       return {
         temp: day.high,
@@ -226,8 +221,8 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
 
   if (loading) {
     return (
-      <View style={trailWeatherStyles.container}>
-        <Text style={trailWeatherStyles.title}>Weather & Conditions</Text>
+      <View style={[trailWeatherStyles.container, { backgroundColor: COLORS.white }]}>
+        <Text style={[trailWeatherStyles.title, { color: COLORS.text }]}>Weather & Conditions</Text>
         <View style={trailWeatherStyles.loader}>
           <ActivityIndicator size="small" color={COLORS.primary} />
         </View>
@@ -242,14 +237,13 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
   const selectedDay = forecast[selectedDayIndex];
 
   return (
-    <View style={trailWeatherStyles.container}>
-      <Text style={trailWeatherStyles.title}>Weather & Conditions</Text>
+    <View style={[trailWeatherStyles.container, { backgroundColor: COLORS.white }]}>
+      <Text style={[trailWeatherStyles.title, { color: COLORS.text }]}>Weather & Conditions</Text>
       
       {/* Current/Selected Weather Hero Card */}
-      <View style={trailWeatherStyles.heroCard}>
-        {/* Selected Day Label */}
+      <View style={[trailWeatherStyles.heroCard, { backgroundColor: COLORS.background }]}>
         {selectedDayIndex > 0 && selectedDay && (
-          <View style={trailWeatherStyles.selectedDayBadge}>
+          <View style={[trailWeatherStyles.selectedDayBadge, { backgroundColor: COLORS.primary }]}>
             <Text style={trailWeatherStyles.selectedDayText}>
               {selectedDay.day} • {selectedDay.date}
             </Text>
@@ -265,13 +259,13 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
             />
           </View>
           <View style={trailWeatherStyles.tempSection}>
-            <Text style={trailWeatherStyles.temperature}>
+            <Text style={[trailWeatherStyles.temperature, { color: COLORS.text }]}>
               {displayWeather?.temp}°
             </Text>
-            <Text style={trailWeatherStyles.weatherCondition}>
+            <Text style={[trailWeatherStyles.weatherCondition, { color: COLORS.text }]}>
               {displayWeather?.condition}
             </Text>
-            <Text style={trailWeatherStyles.feelsLike}>
+            <Text style={[trailWeatherStyles.feelsLike, { color: COLORS.textLight }]}>
               {displayWeather?.isToday 
                 ? `Feels like ${displayWeather?.feelsLike}°`
                 : `Low ${displayWeather?.low}° • High ${displayWeather?.high}°`
@@ -280,46 +274,44 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
           </View>
         </View>
 
-        {/* Stats - Only show for Today */}
         {displayWeather?.isToday && (
           <View style={trailWeatherStyles.statsGrid}>
-            <View style={trailWeatherStyles.statBox}>
+            <View style={[trailWeatherStyles.statBox, { backgroundColor: COLORS.white }]}>
               <Ionicons name="water-outline" size={18} color={COLORS.primary} />
-              <Text style={trailWeatherStyles.statValue}>{displayWeather.humidity}%</Text>
-              <Text style={trailWeatherStyles.statLabel}>Humidity</Text>
+              <Text style={[trailWeatherStyles.statValue, { color: COLORS.text }]}>{displayWeather.humidity}%</Text>
+              <Text style={[trailWeatherStyles.statLabel, { color: COLORS.textLight }]}>Humidity</Text>
             </View>
-            <View style={trailWeatherStyles.statBox}>
+            <View style={[trailWeatherStyles.statBox, { backgroundColor: COLORS.white }]}>
               <Ionicons name="speedometer-outline" size={18} color={COLORS.primary} />
-              <Text style={trailWeatherStyles.statValue}>{displayWeather.wind} mph</Text>
-              <Text style={trailWeatherStyles.statLabel}>Wind</Text>
+              <Text style={[trailWeatherStyles.statValue, { color: COLORS.text }]}>{displayWeather.wind} mph</Text>
+              <Text style={[trailWeatherStyles.statLabel, { color: COLORS.textLight }]}>Wind</Text>
             </View>
           </View>
         )}
 
-        {/* Sunrise/Sunset - Only show for Today */}
         {displayWeather?.isToday && sunTimes && (
-          <View style={trailWeatherStyles.sunTimesRow}>
+          <View style={[trailWeatherStyles.sunTimesRow, { borderTopColor: COLORS.border }]}>
             <View style={trailWeatherStyles.sunTimeBox}>
               <Ionicons name="sunny-outline" size={18} color="#F39C12" />
               <View>
-                <Text style={trailWeatherStyles.sunTimeLabel}>Sunrise</Text>
-                <Text style={trailWeatherStyles.sunTimeValue}>{sunTimes.sunrise}</Text>
+                <Text style={[trailWeatherStyles.sunTimeLabel, { color: COLORS.textLight }]}>Sunrise</Text>
+                <Text style={[trailWeatherStyles.sunTimeValue, { color: COLORS.text }]}>{sunTimes.sunrise}</Text>
               </View>
             </View>
-            <View style={trailWeatherStyles.sunTimeDivider} />
+            <View style={[trailWeatherStyles.sunTimeDivider, { backgroundColor: COLORS.border }]} />
             <View style={trailWeatherStyles.sunTimeBox}>
               <Ionicons name="moon-outline" size={18} color="#9B59B6" />
               <View>
-                <Text style={trailWeatherStyles.sunTimeLabel}>Sunset</Text>
-                <Text style={trailWeatherStyles.sunTimeValue}>{sunTimes.sunset}</Text>
+                <Text style={[trailWeatherStyles.sunTimeLabel, { color: COLORS.textLight }]}>Sunset</Text>
+                <Text style={[trailWeatherStyles.sunTimeValue, { color: COLORS.text }]}>{sunTimes.sunset}</Text>
               </View>
             </View>
           </View>
         )}
       </View>
 
-      {/* 7-Day Forecast - CLICKABLE */}
-      <Text style={trailWeatherStyles.forecastTitle}>7-Day Forecast</Text>
+      {/* 7-Day Forecast */}
+      <Text style={[trailWeatherStyles.forecastTitle, { color: COLORS.text }]}>7-Day Forecast</Text>
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
@@ -331,21 +323,23 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
             key={`forecast-${index}`}
             style={[
               trailWeatherStyles.forecastDay,
-              index === selectedDayIndex && trailWeatherStyles.forecastDaySelected
+              { backgroundColor: COLORS.background },
+              index === selectedDayIndex && [trailWeatherStyles.forecastDaySelected, { backgroundColor: COLORS.primary }]
             ]}
             onPress={() => setSelectedDayIndex(index)}
             activeOpacity={0.7}
           >
             <Text style={[
               trailWeatherStyles.dayName,
-              index === selectedDayIndex && trailWeatherStyles.dayNameSelected
+              { color: COLORS.textLight },
+              index === selectedDayIndex && { color: COLORS.white }
             ]}>
               {day.day}
             </Text>
             
             <View style={[
               trailWeatherStyles.forecastIconWrap,
-              index === selectedDayIndex && trailWeatherStyles.forecastIconWrapSelected
+              index === selectedDayIndex && { backgroundColor: 'rgba(255,255,255,0.2)' }
             ]}>
               <Ionicons 
                 name={day.icon as any} 
@@ -356,13 +350,15 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
             
             <Text style={[
               trailWeatherStyles.tempHigh,
-              index === selectedDayIndex && trailWeatherStyles.tempHighSelected
+              { color: COLORS.text },
+              index === selectedDayIndex && { color: COLORS.white }
             ]}>
               {day.high}°
             </Text>
             <Text style={[
               trailWeatherStyles.tempLow,
-              index === selectedDayIndex && trailWeatherStyles.tempLowSelected
+              { color: COLORS.textLight },
+              index === selectedDayIndex && { color: 'rgba(255,255,255,0.7)' }
             ]}>
               {day.low}°
             </Text>
@@ -370,12 +366,12 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
             {day.rainChance > 20 && (
               <View style={[
                 trailWeatherStyles.rainChance,
-                index === selectedDayIndex && trailWeatherStyles.rainChanceSelected
+                index === selectedDayIndex && { backgroundColor: 'rgba(255,255,255,0.2)' }
               ]}>
                 <Ionicons name="water" size={10} color={index === selectedDayIndex ? COLORS.white : '#1976D2'} />
                 <Text style={[
                   trailWeatherStyles.rainChanceText,
-                  index === selectedDayIndex && trailWeatherStyles.rainChanceTextSelected
+                  index === selectedDayIndex && { color: COLORS.white }
                 ]}>
                   {day.rainChance}%
                 </Text>
@@ -385,12 +381,12 @@ export default function TrailWeather({ trail }: TrailWeatherProps) {
         ))}
       </ScrollView>
 
-      {/* Today's Trail Condition - COMPACT */}
+      {/* Today's Trail Condition */}
       <View style={trailWeatherStyles.todayConditionCard}>
         <View style={[trailWeatherStyles.todayConditionBadge, { backgroundColor: todayCondition.color + '15' }]}>
           <Text style={trailWeatherStyles.todayConditionEmoji}>{todayCondition.emoji}</Text>
           <View style={trailWeatherStyles.todayConditionContent}>
-            <Text style={trailWeatherStyles.todayConditionLabel}>Today's Trail Condition</Text>
+            <Text style={[trailWeatherStyles.todayConditionLabel, { color: COLORS.textLight }]}>Today's Trail Condition</Text>
             <Text style={[trailWeatherStyles.todayConditionText, { color: todayCondition.color }]}>
               {todayCondition.text}
             </Text>

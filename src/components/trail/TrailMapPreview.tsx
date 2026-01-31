@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Mapbox from '@rnmapbox/maps';
+import { useColors } from '../../context/ThemeContext';
 import { trailMapPreviewStyles } from '../../styles/components/trailMapPreview.styles';
-import { COLORS } from '../../constants/colors';
 
 const TRAIL_COLOR = '#8B6F47';
 
@@ -13,6 +13,7 @@ interface TrailMapPreviewProps {
 }
 
 export default function TrailMapPreview({ trail }: TrailMapPreviewProps) {
+  const COLORS = useColors();
   const [is3D, setIs3D] = useState(false);
 
   const handlePreview = () => {
@@ -40,14 +41,12 @@ export default function TrailMapPreview({ trail }: TrailMapPreviewProps) {
   // Calculate center and bounds of trail
   const { center, bounds } = useMemo(() => {
     if (!routeCoordinates || routeCoordinates.length === 0) {
-      // Fallback to trailhead
       return {
         center: [trail?.trailhead_lon || -105.5217, trail?.trailhead_lat || 40.3772],
         bounds: null
       };
     }
 
-    // Calculate bounding box
     let minLon = Infinity, maxLon = -Infinity;
     let minLat = Infinity, maxLat = -Infinity;
 
@@ -58,7 +57,6 @@ export default function TrailMapPreview({ trail }: TrailMapPreviewProps) {
       maxLat = Math.max(maxLat, coord[1]);
     });
 
-    // Center of trail
     const centerLon = (minLon + maxLon) / 2;
     const centerLat = (minLat + maxLat) / 2;
 
@@ -76,7 +74,6 @@ export default function TrailMapPreview({ trail }: TrailMapPreviewProps) {
     const latDiff = bounds.maxLat - bounds.minLat;
     const maxDiff = Math.max(lonDiff, latDiff);
 
-    // Approximate zoom calculation
     if (maxDiff > 0.1) return 11;
     if (maxDiff > 0.05) return 12;
     if (maxDiff > 0.02) return 13;
@@ -85,12 +82,14 @@ export default function TrailMapPreview({ trail }: TrailMapPreviewProps) {
   }, [bounds]);
 
   return (
-    <View style={trailMapPreviewStyles.container}>
+    <View style={[trailMapPreviewStyles.container, { backgroundColor: COLORS.white }]}>
       {/* Header */}
       <View style={trailMapPreviewStyles.header}>
-        <Text style={trailMapPreviewStyles.title}>Trail Map</Text>
+        <Text style={[trailMapPreviewStyles.title, { color: COLORS.text }]}>Trail Map</Text>
         <TouchableOpacity onPress={handleFullMap} style={trailMapPreviewStyles.fullMapButton}>
-          <Text style={trailMapPreviewStyles.fullMapText}>View Full Map</Text>
+          <Text style={[trailMapPreviewStyles.fullMapText, { color: COLORS.primary }]}>
+            View Full Map
+          </Text>
           <Ionicons name="arrow-forward" size={16} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
@@ -172,7 +171,7 @@ export default function TrailMapPreview({ trail }: TrailMapPreviewProps) {
         <TouchableOpacity 
           style={[
             trailMapPreviewStyles.toggleButton,
-            is3D && trailMapPreviewStyles.toggleButtonActive
+            is3D && [trailMapPreviewStyles.toggleButtonActive, { backgroundColor: COLORS.primary }]
           ]}
           onPress={() => setIs3D(!is3D)}
           activeOpacity={0.8}
@@ -186,7 +185,7 @@ export default function TrailMapPreview({ trail }: TrailMapPreviewProps) {
 
         {/* Preview Trail Button */}
         <TouchableOpacity 
-          style={trailMapPreviewStyles.previewButton}
+          style={[trailMapPreviewStyles.previewButton, { backgroundColor: COLORS.primary }]}
           onPress={handlePreview}
           activeOpacity={0.9}
         >

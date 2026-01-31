@@ -1,14 +1,25 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColors } from '../../context/ThemeContext';
+import { useUnits } from '../../context/UnitsContext';
 import { trailStatsStyles } from '../../styles/components/trailStats.styles';
-import { COLORS } from '../../constants/colors';
 
 interface TrailStatsProps {
   trail: any;
 }
 
 export default function TrailStats({ trail }: TrailStatsProps) {
+  const COLORS = useColors();
+  const { 
+    formatDistanceShort, 
+    formatElevationShort, 
+    convertDistance, 
+    convertElevation,
+    getDistanceUnitShort,
+    getElevationUnitShort 
+  } = useUnits();
+
   // Calculate round trip
   const oneWayMiles = trail.distance_miles || 0;
   const roundTripMiles = trail.route_type === 'loop' ? oneWayMiles : oneWayMiles * 2;
@@ -42,38 +53,38 @@ export default function TrailStats({ trail }: TrailStatsProps) {
   };
 
   return (
-    <View style={trailStatsStyles.container}>
-      <Text style={trailStatsStyles.title}>Trail Information</Text>
+    <View style={[trailStatsStyles.container, { backgroundColor: COLORS.white }]}>
+      <Text style={[trailStatsStyles.title, { color: COLORS.text }]}>Trail Information</Text>
 
       {/* Distance */}
       <View style={trailStatsStyles.statGroup}>
-        <View style={trailStatsStyles.iconBox}>
+        <View style={[trailStatsStyles.iconBox, { backgroundColor: `${COLORS.primary}15` }]}>
           <Ionicons name="trail-sign" size={22} color={COLORS.primary} />
         </View>
         <View style={trailStatsStyles.statContent}>
-          <Text style={trailStatsStyles.statLabel}>Distance</Text>
-          <Text style={trailStatsStyles.statValue}>
-            {oneWayMiles.toFixed(1)} miles
+          <Text style={[trailStatsStyles.statLabel, { color: COLORS.textLight }]}>Distance</Text>
+          <Text style={[trailStatsStyles.statValue, { color: COLORS.text }]}>
+            {formatDistanceShort(oneWayMiles)}
           </Text>
-          <Text style={trailStatsStyles.statSubtext}>
+          <Text style={[trailStatsStyles.statSubtext, { color: COLORS.textLight }]}>
             {trail.route_type === 'loop' 
               ? 'Loop Trail' 
-              : `${roundTripMiles.toFixed(1)} miles round trip`}
+              : `${formatDistanceShort(roundTripMiles)} round trip`}
           </Text>
         </View>
       </View>
 
       {/* Elevation */}
       <View style={trailStatsStyles.statGroup}>
-        <View style={trailStatsStyles.iconBox}>
+        <View style={[trailStatsStyles.iconBox, { backgroundColor: `${COLORS.primary}15` }]}>
           <Ionicons name="trending-up" size={22} color={COLORS.primary} />
         </View>
         <View style={trailStatsStyles.statContent}>
-          <Text style={trailStatsStyles.statLabel}>Elevation Gain</Text>
-          <Text style={trailStatsStyles.statValue}>
-            {trail.elevation_gain_ft?.toLocaleString() || 0} ft
+          <Text style={[trailStatsStyles.statLabel, { color: COLORS.textLight }]}>Elevation Gain</Text>
+          <Text style={[trailStatsStyles.statValue, { color: COLORS.text }]}>
+            {formatElevationShort(trail.elevation_gain_ft || 0)}
           </Text>
-          <Text style={trailStatsStyles.statSubtext}>
+          <Text style={[trailStatsStyles.statSubtext, { color: COLORS.textLight }]}>
             {getSteepness()} climb
           </Text>
         </View>
@@ -81,15 +92,15 @@ export default function TrailStats({ trail }: TrailStatsProps) {
 
       {/* Time Estimate */}
       <View style={trailStatsStyles.statGroup}>
-        <View style={trailStatsStyles.iconBox}>
+        <View style={[trailStatsStyles.iconBox, { backgroundColor: `${COLORS.primary}15` }]}>
           <Ionicons name="time" size={22} color={COLORS.primary} />
         </View>
         <View style={trailStatsStyles.statContent}>
-          <Text style={trailStatsStyles.statLabel}>Estimated Time</Text>
-          <Text style={trailStatsStyles.statValue}>
+          <Text style={[trailStatsStyles.statLabel, { color: COLORS.textLight }]}>Estimated Time</Text>
+          <Text style={[trailStatsStyles.statValue, { color: COLORS.text }]}>
             {formatTime(oneWayHours)}
           </Text>
-          <Text style={trailStatsStyles.statSubtext}>
+          <Text style={[trailStatsStyles.statSubtext, { color: COLORS.textLight }]}>
             {trail.route_type === 'loop' 
               ? 'Complete loop' 
               : `${formatTime(roundTripHours)} round trip`}
@@ -99,15 +110,15 @@ export default function TrailStats({ trail }: TrailStatsProps) {
 
       {/* Trail Type */}
       <View style={trailStatsStyles.statGroup}>
-        <View style={trailStatsStyles.iconBox}>
+        <View style={[trailStatsStyles.iconBox, { backgroundColor: `${COLORS.primary}15` }]}>
           <Ionicons name="git-network" size={22} color={COLORS.primary} />
         </View>
         <View style={trailStatsStyles.statContent}>
-          <Text style={trailStatsStyles.statLabel}>Route Type</Text>
-          <Text style={trailStatsStyles.statValue}>
+          <Text style={[trailStatsStyles.statLabel, { color: COLORS.textLight }]}>Route Type</Text>
+          <Text style={[trailStatsStyles.statValue, { color: COLORS.text }]}>
             {getTrailType()}
           </Text>
-          <Text style={trailStatsStyles.statSubtext}>
+          <Text style={[trailStatsStyles.statSubtext, { color: COLORS.textLight }]}>
             {trail.surface_type || 'Mixed terrain'}
           </Text>
         </View>
@@ -115,15 +126,15 @@ export default function TrailStats({ trail }: TrailStatsProps) {
 
       {/* Popularity */}
       <View style={trailStatsStyles.statGroup}>
-        <View style={trailStatsStyles.iconBox}>
+        <View style={[trailStatsStyles.iconBox, { backgroundColor: `${COLORS.primary}15` }]}>
           <Ionicons name="people" size={22} color={COLORS.primary} />
         </View>
         <View style={trailStatsStyles.statContent}>
-          <Text style={trailStatsStyles.statLabel}>Popularity</Text>
-          <Text style={trailStatsStyles.statValue}>
+          <Text style={[trailStatsStyles.statLabel, { color: COLORS.textLight }]}>Popularity</Text>
+          <Text style={[trailStatsStyles.statValue, { color: COLORS.text }]}>
             {trail.popularity || 'Moderate'} traffic
           </Text>
-          <Text style={trailStatsStyles.statSubtext}>
+          <Text style={[trailStatsStyles.statSubtext, { color: COLORS.textLight }]}>
             Best time: {trail.best_time || 'Morning'}
           </Text>
         </View>

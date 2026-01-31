@@ -1,11 +1,15 @@
+
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useColors } from '../../context/ThemeContext';
 
 interface DifficultyBadgeProps {
   difficulty: string;
 }
 
 export default function DifficultyBadge({ difficulty }: DifficultyBadgeProps) {
+  const COLORS = useColors();
+
   const getDifficultyColor = () => {
     switch (difficulty?.toLowerCase()) {
       case 'easy':
@@ -15,7 +19,7 @@ export default function DifficultyBadge({ difficulty }: DifficultyBadgeProps) {
       case 'hard':
         return { bg: '#FFEBEE', text: '#C62828' };
       default:
-        return { bg: '#F5F5F5', text: '#666' };
+        return { bg: `${COLORS.primary}15`, text: COLORS.textLight };
     }
   };
 

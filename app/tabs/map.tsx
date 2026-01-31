@@ -7,7 +7,7 @@ import { supabase } from '../../src/services/supabase/client';
 import { useColors } from '../../src/context/ThemeContext';
 import { useUnits } from '../../src/context/UnitsContext';
 import { mapStyles } from '../../src/styles/screens/map.styles';
-import MapCategories, { CATEGORIES } from '../../src/components/map/MapCategories';
+import MapCategories, { CATEGORIES, getCategoryColor } from '../../src/components/map/MapCategories';
 
 const MAP_STYLES = [
   { id: 'outdoors', label: 'Outdoor', url: Mapbox.StyleURL.Outdoors },
@@ -87,7 +87,9 @@ export default function MapScreen() {
     }
   };
 
+  // Get current category info with dynamic color
   const currentCategory = CATEGORIES.find(c => c.id === activeCategory);
+  const currentCategoryColor = getCategoryColor(activeCategory, COLORS.primary);
 
   return (
     <View style={mapStyles.container}>
@@ -190,10 +192,10 @@ export default function MapScreen() {
         </Text>
       </View>
 
-      {/* Active Category Indicator */}
+      {/* Active Category Indicator - Now uses dynamic color */}
       {!showCategories && currentCategory && (
         <TouchableOpacity 
-          style={[mapStyles.categoryIndicator, { backgroundColor: currentCategory.color }]}
+          style={[mapStyles.categoryIndicator, { backgroundColor: currentCategoryColor }]}
           onPress={() => setShowCategories(true)}
           activeOpacity={0.8}
         >

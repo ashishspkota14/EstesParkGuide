@@ -3,8 +3,8 @@ import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+import { useColors } from '../../context/ThemeContext';
 import { reviewsListStyles } from '../../styles/components/reviewsList.styles';
-import { COLORS } from '../../constants/colors';
 import ReviewForm from './ReviewForm';
 
 interface ReviewsListProps {
@@ -15,13 +15,13 @@ interface ReviewsListProps {
 
 export default function ReviewsList({ reviews, trailId, onReviewChanged }: ReviewsListProps) {
   const { user } = useAuth();
+  const COLORS = useColors();
   const [showForm, setShowForm] = useState(false);
   const [editingReview, setEditingReview] = useState<any>(null);
   const [userReview, setUserReview] = useState<any>(null);
 
   useEffect(() => {
     if (user && reviews) {
-      // Check using profiles.id (from the joined query)
       const existing = reviews.find(r => r.profiles?.id === user.id);
       setUserReview(existing || null);
     } else {
@@ -31,7 +31,6 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
 
   const handleWriteReview = () => {
     if (!user) {
-      // Redirect guest to login with trail ID
       router.push({
         pathname: '/(auth)/login',
         params: { returnTo: 'trail', trailId: trailId }
@@ -93,23 +92,25 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
     const reviewPhotos = item.review_photos || [];
 
     return (
-      <View style={reviewsListStyles.reviewCard}>
+      <View style={[reviewsListStyles.reviewCard, { backgroundColor: COLORS.white }]}>
         <View style={reviewsListStyles.reviewHeader}>
           <View style={reviewsListStyles.userRow}>
             {item.profiles?.avatar_url ? (
               <Image source={{ uri: item.profiles.avatar_url }} style={reviewsListStyles.avatar} />
             ) : (
-              <View style={reviewsListStyles.avatarPlaceholder}>
+              <View style={[reviewsListStyles.avatarPlaceholder, { backgroundColor: COLORS.primary }]}>
                 <Text style={reviewsListStyles.avatarText}>{userInitial}</Text>
               </View>
             )}
             <View style={reviewsListStyles.userInfo}>
-              <Text style={reviewsListStyles.userName}>{userName}</Text>
+              <Text style={[reviewsListStyles.userName, { color: COLORS.text }]}>{userName}</Text>
               {renderStars(item.rating)}
             </View>
           </View>
           <View style={reviewsListStyles.reviewMeta}>
-            <Text style={reviewsListStyles.reviewDate}>{formatDate(item.created_at)}</Text>
+            <Text style={[reviewsListStyles.reviewDate, { color: COLORS.textLight }]}>
+              {formatDate(item.created_at)}
+            </Text>
             {isOwnReview && (
               <TouchableOpacity onPress={handleEditReview} style={reviewsListStyles.editButton}>
                 <Ionicons name="create-outline" size={18} color={COLORS.primary} />
@@ -118,7 +119,7 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
           </View>
         </View>
 
-        <Text style={reviewsListStyles.reviewText}>{item.comment}</Text>
+        <Text style={[reviewsListStyles.reviewText, { color: COLORS.text }]}>{item.comment}</Text>
 
         {reviewPhotos.length > 0 && (
           <View style={reviewsListStyles.photosGrid}>
@@ -135,10 +136,9 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
     );
   };
 
-  // Show form when editing or writing
   if (showForm) {
     return (
-      <View style={reviewsListStyles.container}>
+      <View style={[reviewsListStyles.container, { backgroundColor: COLORS.white }]}>
         <ReviewForm
           trailId={trailId}
           existingReview={editingReview}
@@ -150,9 +150,9 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
   }
 
   return (
-    <View style={reviewsListStyles.container}>
+    <View style={[reviewsListStyles.container, { backgroundColor: COLORS.white }]}>
       <View style={reviewsListStyles.header}>
-        <Text style={reviewsListStyles.title}>
+        <Text style={[reviewsListStyles.title, { color: COLORS.text }]}>
           Reviews {reviews.length > 0 && `(${reviews.length})`}
         </Text>
       </View>
@@ -160,19 +160,19 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
       {/* Write/Edit Review Button */}
       <View style={reviewsListStyles.writeReviewSection}>
         {user && userReview ? (
-          // User has already reviewed - show edit option
           <TouchableOpacity
-            style={reviewsListStyles.editPrompt}
+            style={[reviewsListStyles.editPrompt, { backgroundColor: `${COLORS.primary}15` }]}
             onPress={handleEditReview}
             activeOpacity={0.7}
           >
             <Ionicons name="create-outline" size={18} color={COLORS.primary} />
-            <Text style={reviewsListStyles.editPromptText}>Edit Your Review</Text>
+            <Text style={[reviewsListStyles.editPromptText, { color: COLORS.primary }]}>
+              Edit Your Review
+            </Text>
           </TouchableOpacity>
         ) : (
-          // User hasn't reviewed OR is guest - show write prompt
           <TouchableOpacity
-            style={reviewsListStyles.writePrompt}
+            style={[reviewsListStyles.writePrompt, { backgroundColor: COLORS.primary }]}
             onPress={handleWriteReview}
             activeOpacity={0.7}
           >
@@ -193,11 +193,11 @@ export default function ReviewsList({ reviews, trailId, onReviewChanged }: Revie
         />
       ) : (
         <View style={reviewsListStyles.emptyState}>
-          <View style={reviewsListStyles.emptyIconWrap}>
+          <View style={[reviewsListStyles.emptyIconWrap, { backgroundColor: `${COLORS.primary}15` }]}>
             <Ionicons name="chatbubbles-outline" size={40} color={COLORS.primary} />
           </View>
-          <Text style={reviewsListStyles.emptyTitle}>No Reviews Yet</Text>
-          <Text style={reviewsListStyles.emptyText}>
+          <Text style={[reviewsListStyles.emptyTitle, { color: COLORS.text }]}>No Reviews Yet</Text>
+          <Text style={[reviewsListStyles.emptyText, { color: COLORS.textLight }]}>
             Be the first to share your experience on this trail!
           </Text>
         </View>

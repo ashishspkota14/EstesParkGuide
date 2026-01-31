@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
+import { useColors } from '../../context/ThemeContext';
 import { trailConditionsStyles } from '../../styles/components/trailConditions.styles';
-import { COLORS } from '../../constants/colors';
 
 interface TrailConditionsProps {
   trail: any;
@@ -13,6 +13,7 @@ interface Condition {
 }
 
 export default function TrailConditions({ trail }: TrailConditionsProps) {
+  const COLORS = useColors();
   const [conditions, setConditions] = useState<Condition[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +33,6 @@ export default function TrailConditions({ trail }: TrailConditionsProps) {
         return;
       }
       
-      // Enhanced API with past precipitation data
       const response = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,wind_speed_10m,weather_code,relative_humidity_2m,apparent_temperature&daily=precipitation_sum,snowfall_sum&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America/Denver&past_days=3&forecast_days=1`
       );
@@ -40,7 +40,6 @@ export default function TrailConditions({ trail }: TrailConditionsProps) {
       const data = await response.json();
       const weather = data.current;
       
-      // Calculate past precipitation
       let pastRain = 0;
       let pastSnow = 0;
       if (data.daily?.precipitation_sum && data.daily?.snowfall_sum) {
@@ -68,8 +67,6 @@ export default function TrailConditions({ trail }: TrailConditionsProps) {
     const temp = weather?.temperature_2m;
     const feelsLike = weather?.apparent_temperature || temp;
     const wind = weather?.wind_speed_10m;
-    const humidity = weather?.relative_humidity_2m;
-    const code = weather?.weather_code;
     const elevation = trail.elevation_gain_ft || 0;
     const distance = trail.distance_miles || 0;
     const difficulty = trail.difficulty || 'moderate';
@@ -81,175 +78,84 @@ export default function TrailConditions({ trail }: TrailConditionsProps) {
     const hadRecentSnow = pastSnow > 0.5;
     const isHighElevation = trailElevation > 9500;
 
-    // 1. TEMPERATURE & TRAIL SURFACE CONDITION
     if (temp !== undefined) {
       if (temp < 32 || feelsLike < 25) {
         if (hadRecentSnow || hadRecentRain) {
-          conditions.push({ 
-            emoji: '🧊', 
-            text: 'Icy conditions likely - traction devices recommended' 
-          });
+          conditions.push({ emoji: '🧊', text: 'Icy conditions likely - traction devices recommended' });
         } else if (isWinterSeason) {
-          conditions.push({ 
-            emoji: '🥶', 
-            text: 'Freezing temps - expect frozen/slippery sections' 
-          });
+          conditions.push({ emoji: '🥶', text: 'Freezing temps - expect frozen/slippery sections' });
         } else {
-          conditions.push({ 
-            emoji: '❄️', 
-            text: 'Cold weather - dress in layers and bring warm gear' 
-          });
+          conditions.push({ emoji: '❄️', text: 'Cold weather - dress in layers and bring warm gear' });
         }
       } else if (temp >= 32 && temp < 40) {
         if (hadRecentSnow) {
-          conditions.push({ 
-            emoji: '🌨️', 
-            text: 'Slushy conditions - waterproof boots recommended' 
-          });
+          conditions.push({ emoji: '🌨️', text: 'Slushy conditions - waterproof boots recommended' });
         } else if (hadRecentRain) {
-          conditions.push({ 
-            emoji: '💧', 
-            text: 'Wet and cold - dress warmly and watch footing' 
-          });
+          conditions.push({ emoji: '💧', text: 'Wet and cold - dress warmly and watch footing' });
         } else {
-          conditions.push({ 
-            emoji: '🧥', 
-            text: 'Cool weather - bring a jacket and layer up' 
-          });
+          conditions.push({ emoji: '🧥', text: 'Cool weather - bring a jacket and layer up' });
         }
       } else if (temp >= 40 && temp < 55) {
-        conditions.push({ 
-          emoji: '🧥', 
-          text: 'Cool weather - bring a jacket and layer up' 
-        });
+        conditions.push({ emoji: '🧥', text: 'Cool weather - bring a jacket and layer up' });
       } else if (temp >= 55 && temp < 70) {
-        conditions.push({ 
-          emoji: '✅', 
-          text: 'Perfect hiking temperature - comfortable conditions' 
-        });
+        conditions.push({ emoji: '✅', text: 'Perfect hiking temperature - comfortable conditions' });
       } else if (temp >= 70 && temp < 85) {
-        conditions.push({ 
-          emoji: '☀️', 
-          text: 'Warm weather - wear breathable clothing and sunscreen' 
-        });
+        conditions.push({ emoji: '☀️', text: 'Warm weather - wear breathable clothing and sunscreen' });
       } else if (temp >= 85) {
-        conditions.push({ 
-          emoji: '🌡️', 
-          text: 'Hot conditions - bring extra water and sun protection' 
-        });
+        conditions.push({ emoji: '🌡️', text: 'Hot conditions - bring extra water and sun protection' });
       }
     }
 
-    // 2. WIND CONDITIONS
     if (wind !== undefined) {
       if (wind > 25) {
-        conditions.push({ 
-          emoji: '💨', 
-          text: 'Very windy - secure loose items and use caution' 
-        });
+        conditions.push({ emoji: '💨', text: 'Very windy - secure loose items and use caution' });
       } else if (wind > 15) {
-        conditions.push({ 
-          emoji: '🍃', 
-          text: 'Breezy conditions - bring a windbreaker' 
-        });
+        conditions.push({ emoji: '🍃', text: 'Breezy conditions - bring a windbreaker' });
       } else if (wind > 8) {
-        conditions.push({ 
-          emoji: '🌬️', 
-          text: 'Light breeze - pleasant hiking conditions' 
-        });
+        conditions.push({ emoji: '🌬️', text: 'Light breeze - pleasant hiking conditions' });
       } else {
-        conditions.push({ 
-          emoji: '🍃', 
-          text: 'Calm winds - ideal conditions for the trail' 
-        });
+        conditions.push({ emoji: '🍃', text: 'Calm winds - ideal conditions for the trail' });
       }
     }
 
-    // 3. TRAIL SURFACE (based on past precipitation)
     if (hadRecentRain && temp > 40 && !hadRecentSnow) {
-      conditions.push({ 
-        emoji: '🟤', 
-        text: 'Muddy sections likely - waterproof footwear advised' 
-      });
+      conditions.push({ emoji: '🟤', text: 'Muddy sections likely - waterproof footwear advised' });
     } else if (hadRecentSnow && temp >= 32) {
-      conditions.push({ 
-        emoji: '🌨️', 
-        text: 'Snow on trail - check depth before heading out' 
-      });
+      conditions.push({ emoji: '🌨️', text: 'Snow on trail - check depth before heading out' });
     } else if (isHighElevation && isWinterSeason && temp < 45) {
-      conditions.push({ 
-        emoji: '⚠️', 
-        text: 'High elevation winter trail - ice possible even if clear' 
-      });
+      conditions.push({ emoji: '⚠️', text: 'High elevation winter trail - ice possible even if clear' });
     }
 
-    // 4. ELEVATION GAIN
     if (elevation > 2000) {
-      conditions.push({ 
-        emoji: '⛰️', 
-        text: 'Significant elevation gain - take breaks frequently' 
-      });
+      conditions.push({ emoji: '⛰️', text: 'Significant elevation gain - take breaks frequently' });
     } else if (elevation > 1000) {
-      conditions.push({ 
-        emoji: '📈', 
-        text: 'Moderate elevation gain - steady pace recommended' 
-      });
+      conditions.push({ emoji: '📈', text: 'Moderate elevation gain - steady pace recommended' });
     } else if (elevation > 500) {
-      conditions.push({ 
-        emoji: '🥾', 
-        text: 'Gradual elevation gain - good for all fitness levels' 
-      });
+      conditions.push({ emoji: '🥾', text: 'Gradual elevation gain - good for all fitness levels' });
     } else {
-      conditions.push({ 
-        emoji: '🚶', 
-        text: 'Minimal elevation change - easy walking terrain' 
-      });
+      conditions.push({ emoji: '🚶', text: 'Minimal elevation change - easy walking terrain' });
     }
 
-    // 5. DISTANCE
     if (distance > 8) {
-      conditions.push({ 
-        emoji: '🥾', 
-        text: 'Long trail - start early and bring supplies' 
-      });
+      conditions.push({ emoji: '🥾', text: 'Long trail - start early and bring supplies' });
     } else if (distance > 5) {
-      conditions.push({ 
-        emoji: '🚶', 
-        text: 'Moderate distance - plan for 3-4 hours on trail' 
-      });
+      conditions.push({ emoji: '🚶', text: 'Moderate distance - plan for 3-4 hours on trail' });
     } else if (distance > 2) {
-      conditions.push({ 
-        emoji: '⏱️', 
-        text: 'Medium length hike - allow 1-2 hours to complete' 
-      });
+      conditions.push({ emoji: '⏱️', text: 'Medium length hike - allow 1-2 hours to complete' });
     } else {
-      conditions.push({ 
-        emoji: '👟', 
-        text: 'Short trail - great for a quick outdoor adventure' 
-      });
+      conditions.push({ emoji: '👟', text: 'Short trail - great for a quick outdoor adventure' });
     }
 
-    // 6. DIFFICULTY (only if we have fewer than 5 conditions)
     if (conditions.length < 5) {
       if (difficulty === 'hard' || difficulty === 'expert') {
-        conditions.push({ 
-          emoji: '⚠️', 
-          text: 'Challenging trail - experience and fitness required' 
-        });
+        conditions.push({ emoji: '⚠️', text: 'Challenging trail - experience and fitness required' });
       } else if (difficulty === 'moderate') {
-        conditions.push({ 
-          emoji: '🏔️', 
-          text: 'Moderate difficulty - some fitness required' 
-        });
+        conditions.push({ emoji: '🏔️', text: 'Moderate difficulty - some fitness required' });
       } else {
-        conditions.push({ 
-          emoji: '✨', 
-          text: 'Easy trail - suitable for beginners and families' 
-        });
+        conditions.push({ emoji: '✨', text: 'Easy trail - suitable for beginners and families' });
       }
     }
 
-    // Return exactly 5 conditions
     return conditions.slice(0, 5);
   };
 
@@ -259,10 +165,7 @@ export default function TrailConditions({ trail }: TrailConditionsProps) {
     const distance = trail.distance_miles || 0;
     const difficulty = trail.difficulty || 'moderate';
 
-    conditions.push({ 
-      emoji: '🌤️', 
-      text: 'Check local weather before heading out' 
-    });
+    conditions.push({ emoji: '🌤️', text: 'Check local weather before heading out' });
 
     if (elevation > 2000) {
       conditions.push({ emoji: '⛰️', text: 'Significant elevation gain - take breaks frequently' });
@@ -297,10 +200,16 @@ export default function TrailConditions({ trail }: TrailConditionsProps) {
     return conditions.slice(0, 5);
   };
 
+  // Dynamic card colors - only background and left border change with theme
+  const dynamicCardStyle = {
+    backgroundColor: `${COLORS.primary}15`, // Light tint of primary (was #E8F5E9)
+    borderLeftColor: COLORS.primary,         // Left accent (was static COLORS.primary)
+  };
+
   if (loading) {
     return (
       <View style={trailConditionsStyles.container}>
-        <View style={trailConditionsStyles.card}>
+        <View style={[trailConditionsStyles.card, dynamicCardStyle]}>
           <Text style={trailConditionsStyles.title}>Trail Conditions</Text>
           <ActivityIndicator size="small" color={COLORS.primary} />
         </View>
@@ -314,11 +223,11 @@ export default function TrailConditions({ trail }: TrailConditionsProps) {
 
   return (
     <View style={trailConditionsStyles.container}>
-      <View style={trailConditionsStyles.card}>
+      <View style={[trailConditionsStyles.card, dynamicCardStyle]}>
+        {/* Title and text use stylesheet colors - no changes */}
         <Text style={trailConditionsStyles.title}>Trail Conditions</Text>
         <View style={trailConditionsStyles.conditionsList}>
           {conditions.map((condition, index) => (
-            // @ts-ignore
             <View key={`condition-${index}`} style={trailConditionsStyles.conditionItem}>
               <Text style={trailConditionsStyles.conditionEmoji}>{condition.emoji}</Text>
               <Text style={trailConditionsStyles.conditionText}>{condition.text}</Text>
