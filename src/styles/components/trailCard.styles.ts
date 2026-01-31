@@ -2,51 +2,183 @@ import { StyleSheet } from 'react-native';
 import { COLORS } from '../../constants/colors';
 
 export const trailCardStyles = StyleSheet.create({
+  // Card container - backgroundColor applied dynamically for lightest theme color
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 14,
     overflow: 'hidden',
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+    // Subtle professional shadow
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
+  featuredCard: {
+    width: 260,
+    marginRight: 12,
+    marginBottom: 0,
+  },
+
+  // Image section - clean, no overlay
   imageContainer: {
-    height: 180,
+    height: 150,
     position: 'relative',
+    backgroundColor: '#f0f0f0',
   },
   image: {
     width: '100%',
     height: '100%',
   },
+
+  // Bookmark button - cleaner style
   bookmarkButton: {
     position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    top: 10,
+    right: 10,
+  },
+  bookmarkBg: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  content: {
-    padding: 16,
-  },
-  header: {
+
+  // Route type badge (on image) - clean white
+  routeTypeBadge: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 4,
+  },
+  routeTypeText: {
+    color: COLORS.text,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+
+  // Dog friendly badge (on image)
+  dogBadge: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+  },
+
+  // Content section - cleaner padding
+  content: {
+    padding: 12,
+  },
+
+  // Header row with name
+  header: {
+    marginBottom: 6,
   },
   name: {
-    flex: 1,
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '700',
     color: COLORS.text,
-    marginRight: 8,
+    letterSpacing: -0.2,
   },
+
+  // Rating row with stars
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 8,
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginLeft: 2,
+  },
+  reviewCount: {
+    fontSize: 12,
+    color: COLORS.textLight,
+  },
+
+  // Stats row (distance, elevation, time) - cleaner
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  statText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: COLORS.textLight,
+  },
+  statDivider: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#D0D0D0',
+    marginHorizontal: 8,
+  },
+
+  // Footer with difficulty and location
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  difficultyBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  difficultyText: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'capitalize',
+  },
+
+  // Location
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  locationText: {
+    fontSize: 11,
+    color: COLORS.textLight,
+    maxWidth: 130,
+  },
+
+  // Legacy styles for compatibility
   ratingBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -71,11 +203,6 @@ export const trailCardStyles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textLight,
     fontWeight: '600',
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
   tag: {
     width: 28,
