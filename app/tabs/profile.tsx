@@ -18,7 +18,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { COLORS } from '../../src/constants/colors';
 import { supabase } from '../../src/services/supabase/client';
 import TrailCard from '../../src/components/trail/TrailCard';
-import Settings from '../../src/components/common/Settings';
+import Settings from '../../src/components/profile/Settings';
 import ProfilePhotoUpload from '../../src/components/profile/ProfilePhotoUpload';
 import AchievementBadges from '../../src/components/profile/AchievementBadges';
 import { profileStyles } from '../../src/styles/screens/profile.styles';

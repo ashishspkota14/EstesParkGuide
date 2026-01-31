@@ -1,9 +1,12 @@
 import { Slot } from 'expo-router';
-import { AuthProvider } from '../src/context/AuthContext';
-import Mapbox from '@rnmapbox/maps';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import Mapbox from '@rnmapbox/maps';
+import { AuthProvider } from '../src/context/AuthContext';
+import { ThemeProvider } from '../src/context/ThemeContext';
+import { UnitsProvider } from '../src/context/UnitsContext';
 
-// Initialize Mapbox outside
+// Initialize Mapbox outside component
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
 if (MAPBOX_TOKEN) {
   Mapbox.setAccessToken(MAPBOX_TOKEN);
@@ -21,7 +24,12 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <Slot />
+      <ThemeProvider>
+        <UnitsProvider>
+          <StatusBar style="dark" />
+          <Slot />
+        </UnitsProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }
